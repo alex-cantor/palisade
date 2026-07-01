@@ -69,29 +69,25 @@ create_lin_templates() {
 
 create_win_templates() {
     # download all of the windows images
+    echo "For Windows 10, good luck. Microsoft doesn't seem to provide a direct download link for the ISO. You may need to use the Media Creation Tool or other methods to obtain the ISO. I'd suggest simply not using it."
     echo "For Windows 11, go to https://www.microsoft.com/en-us/evalcenter/evaluate-windows-11-enterprise > Download the ISO - Windows 11 Enterprise LTSC > Download now > ISO - Enterprise LTSC Download > 64-bit edition > Save to /var/lib/vz/template/iso/Win11_22H2_English_x64.iso"
     echo "For Windows Server 2016, go to https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016 > Download the ISO > Download now > ISO - Windows Server 2016 > 64-bit edition > Save to /var/lib/vz/template/iso/WinServer2016_English_x64.iso"
     echo "For Windows Server 2019, go to https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2019 > Download the ISO > Download now > ISO - Windows Server 2019 > 64-bit edition > Save to /var/lib/vz/template/iso/WinServer2019_English_x64.iso"
     echo "For Windows Server 2022, go to https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2022 > Download the ISO > Download now > ISO - Windows Server 2022 > 64-bit edition > Save to /var/lib/vz/template/iso/WinServer2022_English_x64.iso"
     echo "For Windows Server 2025, go to https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2025 > Download the ISO > Download now > ISO - Windows Server 2025 > 64-bit edition > Save to /var/lib/vz/template/iso/WinServer2025_English_x64.iso"
+    
+    # generate 
+
     # make the templates
     declare -A templates
 
-    templates[9100] = "Win10_22H2_English_x64.iso"
     templates[9101] = "Win11_22H2_English_x64.iso"
+    templates[9102] = "WinServer2016_English_x64.iso"
+    templates[9103] = "WinServer2019_English_x64.iso"
+    templates[9104] = "WinServer2022_English_x64.iso"
+    templates[9105] = "WinServer2025_English_x64.iso"
 
-    for id in "${!templates[@]}"; do
-        downloaded_file="${templates[$id]}"
-        if [ -f "$downloaded_file" ]; then
-            echo "Creating template for $downloaded_file with ID $id"
-            qm create "$id" --name "${downloaded_file%.*}" --memory 4096 --net0 virtio,bridge=vmbr0 --ide2 local:cloudinit --boot c --scsihw virtio-scsi-pci --scsi0 local-lvm:0,import-from="$downloaded_file"
-            qm set "$id" --serial0 socket --vga serial0
-            qm set "$id" --ciuser clouduser --cipassword cloudpassword
-            qm set "$id" --sshkey ~/.ssh/id_rsa.pub
-            qm template "$id"
-            echo "Template for $downloaded_file with ID $id created successfully"
-        else
-            echo "File $downloaded_file not found, skipping template creation for ID $id"
-        fi
-    done
+    # TODO
 }
+
+create_freebsd_templates() {}
