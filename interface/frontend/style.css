@@ -10,23 +10,19 @@ body {
 }
 
 .navbar {
-    /* width: 100vw; */
-    height: 10vh;
-    background: #ffd200;
+    height: 6vh;
+    background: #e21833;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* margin-left: 20px;
-    margin-right: 20px; */
     list-style: none;
     box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
 }
 
 .navbar > li {
-    /* background: #e21833; */
     padding: 5px;
     border-radius: 5px;
-    color:black;
+    color:white;
     margin: 30px;
     font-weight: bold;
 }
@@ -38,26 +34,31 @@ body {
     transform: translate(-50%,-50%);
     width: 225px;
     height: 275px;
-    background: #f7f7f7;
-    border-radius: 5%;
+    background: white;
+    border-radius: 5px;
     overflow:hidden;
     display:flex;
     flex-direction: column;
     align-items: center;
     box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
 }
-.login > div:nth-child(1) {
+.login-header {
     width: 100%;
-    height: 20%;
+    height: 15%;
     background: #e21833;
     display:flex;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     color:white;
+    padding-left: 17px;
 }
 
-.login > div:nth-child(2) {
-    /*background:black;*/
+.login-header > h1 {
+    font-size: 24px;
+}
+
+.login-body {
     width:100%;
     height:80%;
     display:flex;
@@ -68,26 +69,31 @@ body {
     margin-bottom:10px;
 }
 
-.login > div:nth-child(2) > div {
+.login-body > div {
     display:flex;
   flex-direction:column;
   gap:5px;
 }
 
-.login > div:nth-child(2) > div > input {
-    padding: 10px;
-    border-radius: 10px;
-    border: none;
+.login-body > div > input {
+    padding: 8px 10px;
+    border-radius: 5px;
+    border: 1px solid black;
+    background: #f7f7f7;
 }
 
-.login > div:nth-child(2) > div > input:active {
+.login-body > div > input:active {
     border:none;
 }
 
 #login-button {
-    padding: 10px;
+    padding: 8px 15px;
     background: #e21833;
     border-radius:10px;
     border:none;
     color:white;
+    position: relative;
+    top: 20px;
+    border-radius: 3px;
+    left: -65px;
 }
