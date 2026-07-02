@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Palisade</title>
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <nav>
+      <ul class="navbar">
+        <div>
+            <li>SCOREBOARD</li>
+            <li>INJECTS</li>
+            <li>ANNOUNCEMENTS</li>
+            <li>SERVICES</li>
+        </div>
+        <div>
+            <li>TEAMXX: LOGOUT</li>
+        </div>
+      </ul>
+    </nav>
+
+    <div class="feed">
+        <div class="services-wrapper standard-dashboard-wrapper">
+            <div class="dashboard-header">
+                <h1>Services</h1>
+            </div>
+            <div class="services">
+                <table id="services">
+                    <tbody>
+                        <tr>
+                            <th>team###</th>
+                            <th>vista-rdp</th>
+                            <th>2016-smtp</th>
+                            <th>2019-snmp</th>
+                            <th>nix-ssh</th>
+                            <th>arch-http</th>
+                            <th>win11-rdp</th>
+                        </tr>
+                        <tr>
+                            <td>team001</td>
+                            <td>yikers</td>
+                            <td>yikers</td>
+                            <td>yikers</td>
+                            <td>yikers</td>
+                            <td>yikers</td>
+                            <td>yikers</td>
+                        </tr>
+                        <tr>
+                            <td>team002</td>
+                            <td>bueno!</td>
+                            <td>yikers</td>
+                            <td>yikers</td>
+                            <td>bueno!</td>
+                            <td>yikers</td>
+                            <td>yikers</td>
+                        </tr>
+                        <tr>
+                            <td>team003</td>
+                            <td>bueno!</td>
+                            <td>bueno!</td>
+                            <td>bueno!</td>
+                            <td>yikers</td>
+                            <td>bueno!</td>
+                            <td>bueno!</td>
+                        </tr>
+                        <tr>
+                            <td>team004</td>
+                            <td>bueno!</td>
+                            <td>yikers</td>
+                            <td>yikers</td>
+                            <td>bueno!</td>
+                            <td>yikers</td>
+                            <td>yikers</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+  </body>
+</html>
+
+<script>
+    let services = document.getElementById("services");
+
+    function useWords() {
+        for (var i = 0, row; row = services.rows[i]; i++) {
+            for (var j = 0, col; col = row.cells[j]; j++) {
+                if(col.textContent == "yikers") {
+                    col.style.color = "green";
+                } else if (col.textContent == "bueno!") {
+                    col.style.color = "red";
+                }
+            }
+        }
+    }
+
+    function useAlex() {
+        for (var i = 0, row; row = services.rows[i]; i++) {
+            for (var j = 0, col; col = row.cells[j]; j++) {
+                let cell_img = document.createElement("img");
+                cell_img.style.maxHeight = "50%";
+                cell_img.style.maxWidth = "50%";
+                if(col.textContent == "yikers") {
+                    cell_img.src = "../images/service/service_down_with_bg.png"
+                    col.textContent = "";
+                    col.appendChild(cell_img);
+                } else if (col.textContent == "bueno!") {
+                    cell_img.src = "../images/service/service_up_with_bg.png";
+                    col.textContent = "";
+                    col.appendChild(cell_img);
+                }
+            }
+        }
+    }
+    useAlex()
+</script>

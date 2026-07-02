@@ -16,13 +16,19 @@ body {
   list-style: none;
   box-shadow: 0 0 10px rgba(0,0,0,.5)
 }
-.navbar > li {
+.navbar > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.navbar > div > li {
   padding: 5px;
   border-radius: 5px;
   color: #fff;
   margin: 30px;
   font-weight: 700
 }
+/* Login-specific */
 .login {
   position: absolute;
   top: 50%;
@@ -36,7 +42,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: rgba(149,157,165,.2) 0 8px 24px
+  box-shadow: rgba(149,157,165,.2) 0 8px 24px;
 }
 .login-header {
   width: 100%;
@@ -86,4 +92,85 @@ body {
   top: 20px;
   border-radius: 3px;
   left: -65px
+}
+/* Competitor Dashboard-Specific */
+.feed {
+  width: 100%;
+  height: calc(99vh - 50px);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: column;
+  margin-top: 50px;
+  gap: 15px;
+}
+.standard-dashboard-wrapper {
+  width: 90%;
+  background: white;
+  border: 1px solid black;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  border: 0;
+  box-shadow: rgba(149, 157, 165, .2) 0 8px 24px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.dashboard-header{
+  width: 100%;
+  background: #e21833;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  color: #fff;
+  padding-left: 17px;
+  padding-block: 10px;
+}
+
+.dashboard-header > h1 {
+  font-size: 24px;
+}
+
+.standard-dashboard-wrapper > div:nth-child(2) {
+  background: white;
+  width: 100%;
+  display: flex;
+  align-items:center;
+  justify-content:center;
+  padding-block: 15px;
+}
+
+.standard-dashboard-wrapper > div > table {
+  width: calc(100% - 2*15px);
+  text-align: left;
+  border-collapse: collapse;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.standard-dashboard-wrapper > div > table > tbody > tr > th {
+  background: #ffd200;
+  padding: 5px;
+}
+
+.standard-dashboard-wrapper > div > table > tbody > tr > td {
+  padding: 5px;
+}
+
+.standard-dashboard-wrapper > div > table > tbody > tr {
+  background: #f8de74;
+}
+
+.standard-dashboard-wrapper > div > table > tbody > tr:nth-child(even) {
+  background: #f7e9af;
+}
+/* Competitor Services-Specific */
+.services > table > tbody > tr > th:nth-child(1) {
+  border-right: 1px solid black;
+}
+.services > table > tbody > tr > td:nth-child(1) {
+  border-right: 1px solid black;
 }
