@@ -1,6 +1,8 @@
 # palisade
 
-A mock CCDC environment generator, to quickly spin up networks on PVE for realistic adversarial simulation
+A mock CCDC environment generator, to quickly spin up networks on PVE for realistic adversarial simulation.
+
+> Updates regarding the project will be posted at [acantor.me/blog](https://acantor.me/blog)
 
 ## About
 
