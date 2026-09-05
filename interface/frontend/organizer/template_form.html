@@ -1,0 +1,52 @@
+{% extends "organizer/base.html" %}
+{% block title %}{% if editing %}Edit {{ template.name }}{% else %}New Template{% endif %}{% endblock %}
+{% block content %}
+
+<div class="org-page-header">
+  <h1>{% if editing %}Edit Template — {{ template.name }}{% else %}New Machine Template{% endif %}</h1>
+  <a class="org-button org-button-secondary" href="{% url 'organizer:template_list' %}">&larr; Back</a>
+</div>
+
+<div class="org-card">
+  <div class="org-card-header"><h2>{% if editing %}Edit{% else %}Create{% endif %} Template</h2></div>
+  <div class="org-card-body">
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="org-form-row">
+        <label for="{{ form.name.id_for_label }}">Name*</label>
+        {{ form.name }}
+        {% if form.name.errors %}<p style="color:#e21833;font-size:12px;">{{ form.name.errors.0 }}</p>{% endif %}
+      </div>
+
+      <div class="org-form-row-split">
+        <div class="org-form-row">
+          <label for="{{ form.os_family.id_for_label }}">OS Family*</label>
+          {{ form.os_family }}
+        </div>
+        <div class="org-form-row">
+          <label for="{{ form.proxmox_vmid.id_for_label }}">ProxMox VMID</label>
+          {{ form.proxmox_vmid }}
+          <p class="org-hint">e.g. 9004 for tmpl-debian12. Leave blank until template exists in PVE.</p>
+        </div>
+      </div>
+
+      <div class="org-form-row">
+        <label for="{{ form.role.id_for_label }}">Role</label>
+        {{ form.role }}
+        <p class="org-hint">e.g. "Web Server", "Firewall". Used as the VM name during provisioning.</p>
+      </div>
+
+      <div class="org-form-row">
+        <label for="{{ form.description.id_for_label }}">Description</label>
+        {{ form.description }}
+      </div>
+
+      <div style="margin-top:16px;">
+        <button class="org-button" type="submit">{% if editing %}Save Changes{% else %}Create Template{% endif %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

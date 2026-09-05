@@ -1,0 +1,94 @@
+{% extends "organizer/base.html" %}
+{% block title %}Machines — {{ competition.name }}{% endblock %}
+{% block content %}
+
+<div class="org-page-header">
+  <h1>Machines &mdash; {{ competition.name }}</h1>
+  <a class="org-button org-button-secondary" href="{% url 'organizer:competition_detail' competition.pk %}">&larr; Back</a>
+</div>
+
+{# Machine configuration #}
+<div class="org-card">
+  <div class="org-card-header"><h2>Configured Machines</h2></div>
+  <div class="org-card-body" style="padding:0;">
+    <table class="org-table" style="width:100%;">
+      <thead>
+        <tr><th>Template</th><th>OS</th><th>Role</th><th>ProxMox VMID</th><th>Qty</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for cm in assigned %}
+        <tr>
+          <td><strong>{{ cm.machine_template.name }}</strong></td>
+          <td>{{ cm.machine_template.get_os_family_display }}</td>
+          <td>{{ cm.machine_template.role|default:"—" }}</td>
+          <td>{% if cm.machine_template.proxmox_vmid %}<code>{{ cm.machine_template.proxmox_vmid }}</code>{% else %}<span style="color:#999;">not set</span>{% endif %}</td>
+          <td>{{ cm.quantity }}</td>
+          <td style="text-align:right;">
+            <form method="post" action="{% url 'organizer:competition_machine_remove' competition.pk cm.pk %}" onsubmit="return confirm('Remove {{ cm.machine_template.name }}?');">
+              {% csrf_token %}
+              <button class="org-button org-button-secondary" style="padding:5px 12px;font-size:12px;" type="submit">Remove</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">No machines configured yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="org-card">
+  <div class="org-card-header"><h2>Add Machine</h2></div>
+  <div class="org-card-body">
+    <form method="post" action="{% url 'organizer:competition_machine_add' competition.pk %}" style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;">
+      {% csrf_token %}
+      <div class="org-form-row" style="margin:0;">
+        <label for="{{ add_form.template.id_for_label }}">Template</label>
+        {{ add_form.template }}
+      </div>
+      <div class="org-form-row" style="margin:0;">
+        <label for="{{ add_form.quantity.id_for_label }}">Quantity</label>
+        {{ add_form.quantity }}
+      </div>
+      <button class="org-button" type="submit">Add</button>
+    </form>
+  </div>
+</div>
+
+{# Provisioned VMs (baseline + full) #}
+<div class="org-card">
+  <div class="org-card-header"><h2>Provisioned VMs</h2></div>
+  <div class="org-card-body" style="padding:0;">
+    <table class="org-table" style="width:100%;">
+      <thead>
+        <tr><th>VM Name</th><th>VMID</th><th>Template</th><th>Team</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for vm in provisioned %}
+        <tr>
+          <td><code>{{ vm.name }}</code></td>
+          <td><code>{{ vm.vmid }}</code></td>
+          <td>{{ vm.machine_template.name }}</td>
+          <td>{{ vm.team.name }}</td>
+          <td>
+            <span class="org-tile-status {% if vm.status == 'running' %}org-status-live{% elif vm.status == 'error' %}org-status-draft{% else %}org-status-provisioning{% endif %}">
+              {{ vm.get_status_display }}
+            </span>
+          </td>
+          <td style="text-align:right;">
+            <form method="post" action="{% url 'organizer:competition_machine_browser' competition.pk vm.pk %}">
+              {% csrf_token %}
+              <button class="org-button" style="padding:5px 12px;font-size:12px;" type="submit">&#128196; Open in Browser</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">No VMs provisioned yet. Run baseline provision from the competition page.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

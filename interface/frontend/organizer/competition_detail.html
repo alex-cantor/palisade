@@ -9,7 +9,6 @@
       <span class="org-tile-status org-status-{{ competition.status }}">{{ competition.get_status_display }}</span>
       <span class="org-chip">{{ competition.get_difficulty_display }}</span>
       <span class="org-chip">{{ competition.get_industry_display }}</span>
-      <span class="org-chip">{{ competition.get_generation_mode_display }} generation</span>
     </div>
   </div>
 </div>
@@ -21,15 +20,9 @@
       <tr><th>Starts</th><td>{{ competition.start_time }}</td></tr>
       <tr><th>Ends</th><td>{{ competition.end_time }}</td></tr>
       <tr><th>Teams provisioned</th><td>{{ competition.teams.count }}</td></tr>
-      {% if competition.generation_mode == "precise" %}
-      <tr><th>Machines</th>
-        <td>
-          {% for m in competition.machines.all %}{{ m.quantity }}x {{ m.machine_template.name }}{% if not forloop.last %}, {% endif %}{% empty %}None selected{% endfor %}
-        </td>
-      </tr>
-      {% else %}
-      <tr><th>Machines</th><td>~{{ competition.random_machine_count }} (random)</td></tr>
-      {% endif %}
+      <tr><th>Machines configured</th><td>
+        {% for m in machines %}{{ m.quantity }}x {{ m.machine_template.name }}{% if not forloop.last %}, {% endif %}{% empty %}None — <a href="{% url 'organizer:competition_machines' competition.pk %}">configure machines</a>{% endfor %}
+      </td></tr>
     </table>
   </div>
 </div>
@@ -39,23 +32,36 @@
 <div class="org-tile-grid org-tile-grid-small">
   <a class="org-tile" href="{% url 'organizer:competition_announcements' competition.pk %}">
     <h2>Announcements</h2>
-    <p class="org-hint">Post updates to competitors.</p>
+    <p class="org-hint">Post and schedule updates for competitors.</p>
   </a>
   <a class="org-tile" href="{% url 'organizer:competition_injects' competition.pk %}">
     <h2>Injects</h2>
-    <p class="org-hint">Create injects and view submission status.</p>
+    <p class="org-hint">Create injects or pull from the library.</p>
   </a>
   <a class="org-tile" href="{% url 'organizer:competition_scoreboard' competition.pk %}">
     <h2>Scoreboard</h2>
     <p class="org-hint">View team standings.</p>
   </a>
+  <a class="org-tile" href="{% url 'organizer:competition_teams' competition.pk %}">
+    <h2>Teams</h2>
+    <p class="org-hint">Manage team accounts and credentials.</p>
+  </a>
+  <a class="org-tile" href="{% url 'organizer:competition_machines' competition.pk %}">
+    <h2>Machines</h2>
+    <p class="org-hint">View provisioned VMs and open browser consoles.</p>
+  </a>
 </div>
 
 {% else %}
 
+{# Pre-live provisioning workflow #}
+
 <div class="org-card">
-  <div class="org-card-header"><h2>Provision Teams</h2></div>
+  <div class="org-card-header"><h2>Step 1 — Provision Teams</h2></div>
   <div class="org-card-body">
+    {% if competition.teams.count > 0 %}
+    <p class="org-hint" style="margin-bottom:10px;">&#10003; {{ competition.teams.count }} team(s) provisioned. <a href="{% url 'organizer:competition_teams' competition.pk %}">Manage teams &rarr;</a></p>
+    {% endif %}
     <form method="post" action="{% url 'organizer:competition_provision_teams' competition.pk %}">
       {% csrf_token %}
       {{ provision_form.as_p }}
@@ -65,20 +71,63 @@
 </div>
 
 <div class="org-card">
-  <div class="org-card-header"><h2>Infrastructure Provisioning</h2></div>
+  <div class="org-card-header"><h2>Step 2 — Configure &amp; Baseline Provision</h2></div>
   <div class="org-card-body">
-    <p class="org-hint">VM/network provisioning isn't wired up yet — this is a placeholder for the future Proxmox integration.</p>
+    <p class="org-hint" style="margin-bottom:14px;">
+      First, set which machines this competition uses. Then run a baseline provision to create
+      <strong>one copy of each VM</strong> — this is your staging environment for injecting vulnerabilities
+      before cloning to all teams.
+    </p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a class="org-button org-button-secondary" href="{% url 'organizer:competition_machines' competition.pk %}">Configure Machines &rarr;</a>
+      <form method="post" action="{% url 'organizer:competition_provision_baseline' competition.pk %}">
+        {% csrf_token %}
+        <button class="org-button" type="submit"
+          {% if not machines %}disabled title="Add machines first"{% endif %}>
+          Provision Baseline
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="org-card">
+  <div class="org-card-header"><h2>Step 3 — Inject Vulnerabilities (Manual)</h2></div>
+  <div class="org-card-body">
+    <p class="org-hint" style="margin-bottom:14px;">
+      Log into the baseline VMs and manually configure vulnerabilities, misconfigurations, and
+      scoring checks. Use the machine list to open browser consoles for each VM.
+    </p>
+    <a class="org-button org-button-secondary" href="{% url 'organizer:competition_machines' competition.pk %}">
+      Open Machine List &rarr;
+    </a>
+  </div>
+</div>
+
+<div class="org-card">
+  <div class="org-card-header"><h2>Step 4 — Full Provision</h2></div>
+  <div class="org-card-body">
+    <p class="org-hint" style="margin-bottom:14px;">
+      Clone the baseline VMs to all teams, each on their own subnet. Requires teams to be
+      provisioned and at least one machine configured.
+    </p>
     <form method="post" action="{% url 'organizer:competition_provision_infra' competition.pk %}">
       {% csrf_token %}
-      <button class="org-button org-button-secondary" type="submit">Provision Infrastructure</button>
+      <button class="org-button" type="submit"
+        {% if competition.teams.count == 0 or not machines %}disabled title="Provision teams and configure machines first"{% endif %}>
+        Full Provision
+      </button>
     </form>
   </div>
 </div>
 
 <div class="org-card">
-  <div class="org-card-header"><h2>Go Live</h2></div>
+  <div class="org-card-header"><h2>Step 5 — Go Live</h2></div>
   <div class="org-card-body">
-    <p class="org-hint">Once teams are provisioned, activate the competition to unlock announcements, injects, and the scoreboard.</p>
+    <p class="org-hint" style="margin-bottom:14px;">
+      Activates the competition for competitors — unlocks the dashboard, announcements, injects,
+      and scoreboard.
+    </p>
     <form method="post" action="{% url 'organizer:competition_go_live' competition.pk %}">
       {% csrf_token %}
       <button class="org-button" type="submit">Go Live</button>

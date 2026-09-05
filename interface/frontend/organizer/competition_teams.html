@@ -1,0 +1,107 @@
+{% extends "organizer/base.html" %}
+{% block title %}Teams — {{ competition.name }}{% endblock %}
+{% block content %}
+
+<div class="org-page-header">
+  <h1>Teams &mdash; {{ competition.name }}</h1>
+  <a class="org-button org-button-secondary" href="{% url 'organizer:competition_detail' competition.pk %}">&larr; Back</a>
+</div>
+
+{# Add team + add member forms #}
+<div class="org-card">
+  <div class="org-card-header"><h2>Add Team</h2></div>
+  <div class="org-card-body">
+    <form method="post" action="{% url 'organizer:team_create' competition.pk %}" style="display:flex;gap:12px;align-items:flex-end;">
+      {% csrf_token %}
+      <div class="org-form-row" style="margin:0;">
+        <label>Team Name</label>
+        <input type="text" name="name" placeholder="e.g. Firewall FC" required />
+      </div>
+      <button class="org-button" type="submit">Create Team</button>
+    </form>
+  </div>
+</div>
+
+<div class="org-card">
+  <div class="org-card-header"><h2>Add Member</h2></div>
+  <div class="org-card-body">
+    <form method="post" action="{% url 'organizer:member_add' competition.pk %}" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+      {% csrf_token %}
+      <div class="org-form-row" style="margin:0;">
+        <label>Team</label>
+        {{ add_member_form.team }}
+      </div>
+      <div class="org-form-row" style="margin:0;">
+        <label>Full Name</label>
+        <input type="text" name="full_name" placeholder="Jane Smith" required />
+      </div>
+      <div class="org-form-row" style="margin:0;">
+        <label>Username</label>
+        <input type="text" name="username" placeholder="jsmith" required />
+      </div>
+      <div class="org-form-row" style="margin:0;">
+        <label>Password</label>
+        <input type="text" name="password" placeholder="changeme" required />
+      </div>
+      <button class="org-button" type="submit">Add Member</button>
+    </form>
+  </div>
+</div>
+
+{# Teams + members #}
+{% for team in teams %}
+<div class="org-card">
+  <div class="org-card-header" style="display:flex;align-items:center;justify-content:space-between;">
+    <h2>{{ team.name }}</h2>
+    <form method="post" action="{% url 'organizer:team_delete' competition.pk team.pk %}" onsubmit="return confirm('Delete {{ team.name }} and all its members?');">
+      {% csrf_token %}
+      <button class="org-button org-button-secondary" style="padding:4px 12px;font-size:12px;" type="submit">Delete Team</button>
+    </form>
+  </div>
+  <div class="org-card-body" style="padding:0;">
+    <table class="org-table" style="width:100%;">
+      <thead>
+        <tr><th>Name</th><th>Username</th><th>Edit</th><th>Reset Password</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for member in team.members.all %}
+        <tr>
+          <td>{{ member.user.get_full_name|default:member.user.username }}</td>
+          <td><code>{{ member.user.username }}</code></td>
+          <td>
+            <form method="post" action="{% url 'organizer:member_edit' competition.pk member.pk %}" style="display:flex;gap:6px;align-items:center;">
+              {% csrf_token %}
+              <input type="text" name="full_name" value="{{ member.user.get_full_name|default:member.user.username }}" style="width:130px;" required />
+              <input type="text" name="username" value="{{ member.user.username }}" style="width:100px;" required />
+              <button class="org-button" style="padding:4px 10px;font-size:11px;" type="submit">Save</button>
+            </form>
+          </td>
+          <td>
+            <form method="post" action="{% url 'organizer:member_reset_password' competition.pk member.pk %}" style="display:flex;gap:6px;align-items:center;">
+              {% csrf_token %}
+              <input type="text" name="new_password" placeholder="New password" style="width:130px;" required />
+              <button class="org-button" style="padding:4px 10px;font-size:11px;" type="submit">Reset</button>
+            </form>
+          </td>
+          <td style="text-align:right;">
+            <form method="post" action="{% url 'organizer:member_delete' competition.pk member.pk %}" onsubmit="return confirm('Remove {{ member.user.get_full_name|default:member.user.username }}?');">
+              {% csrf_token %}
+              <button class="org-button org-button-secondary" style="padding:4px 10px;font-size:11px;" type="submit">Remove</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="text-align:center;color:#999;padding:14px;">No members yet — add one above.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% empty %}
+<div class="org-empty-state">
+  <p class="org-empty-title">No teams yet.</p>
+  <p class="org-empty-subtitle">Create a team above or use <a href="{% url 'organizer:competition_detail' competition.pk %}">Provision Teams</a> to bulk-create them.</p>
+</div>
+{% endfor %}
+
+{% endblock %}

@@ -8,46 +8,143 @@
 </div>
 
 <div class="org-card">
-  <div class="org-card-header"><h2>New Inject</h2></div>
+  <div class="org-card-header" style="display:flex;align-items:center;justify-content:space-between;">
+    <h2>New Inject</h2>
+    <button class="org-button org-button-secondary" style="padding:5px 14px;font-size:12px;" onclick="document.getElementById('inject-library').style.display = document.getElementById('inject-library').style.display === 'none' ? 'block' : 'none';">
+      &#128218; Pick from Library
+    </button>
+  </div>
+
+  {# Inject library #}
+  <div id="inject-library" style="display:none;border-bottom:1px solid #e8e8e8;">
+    <div style="padding:14px 18px;">
+      <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <input id="lib-search" type="text" placeholder="Search injects..." style="width:240px;" oninput="filterLibrary()" />
+        <select id="lib-category" onchange="filterLibrary()">
+          <option value="">All Categories</option>
+          {% for cat in categories %}<option value="{{ cat }}">{{ cat }}</option>{% endfor %}
+        </select>
+      </div>
+      <div id="lib-table-wrap" class="org-table-scroll" style="max-height:320px;overflow-y:auto;">
+        <table class="org-table" style="width:100%;" id="lib-table">
+          <thead><tr><th>ID</th><th>Category</th><th>Subject</th><th>Points</th><th>Duration</th><th></th></tr></thead>
+          <tbody id="lib-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <div class="org-card-body">
-    <form method="post">
+    <form method="post" id="inject-form">
       {% csrf_token %}
-      {{ form.as_p }}
-      <button class="org-button" type="submit">Create Inject</button>
+      <div class="org-form-row">
+        <label for="{{ form.title.id_for_label }}">Title*</label>
+        {{ form.title }}
+      </div>
+      <div class="org-form-row">
+        <label for="{{ form.description.id_for_label }}">Description</label>
+        {{ form.description }}
+      </div>
+      <div class="org-form-row-split">
+        <div class="org-form-row">
+          <label for="{{ form.start_time.id_for_label }}">Start*</label>
+          {{ form.start_time }}
+        </div>
+        <div class="org-form-row">
+          <label for="{{ form.due_time.id_for_label }}">Due*</label>
+          {{ form.due_time }}
+        </div>
+        <div class="org-form-row">
+          <label for="{{ form.points.id_for_label }}">Points*</label>
+          {{ form.points }}
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <button class="org-button" type="submit">Create Inject</button>
+      </div>
     </form>
   </div>
 </div>
 
 <div class="org-card">
   <div class="org-card-header"><h2>Submission Status</h2></div>
-  <div class="org-card-body">
+  <div class="org-card-body" style="padding:0;">
     <div class="org-table-scroll">
-      <table class="org-table">
+      <table class="org-table" style="width:100%;">
         <thead>
           <tr>
-            <th>Inject</th>
-            <th>Due</th>
-            <th>Points</th>
+            <th>Inject</th><th>Due</th><th>Points</th>
             {% for team in teams %}<th>{{ team.name }}</th>{% endfor %}
+            <th></th>
           </tr>
         </thead>
         <tbody>
           {% for row in rows %}
           <tr>
-            <td>{{ row.inject.title }}</td>
+            <td title="{{ row.inject.description }}">{{ row.inject.title }}</td>
             <td>{{ row.inject.due_time|date:"m/d H:i" }} UTC</td>
             <td>{{ row.inject.points }}</td>
             {% for submitted in row.cells %}
-            <td class="{% if submitted %}org-cell-yes{% else %}org-cell-no{% endif %}">{% if submitted %}&#10003;{% else %}&mdash;{% endif %}</td>
+            <td class="{% if submitted %}org-cell-yes{% else %}org-cell-no{% endif %}">
+              {% if submitted %}&#10003;{% else %}&mdash;{% endif %}
+            </td>
             {% endfor %}
+            <td style="text-align:right;">
+              <form method="post" action="{% url 'organizer:inject_delete' competition.pk row.inject.pk %}" onsubmit="return confirm('Delete this inject?');">
+                {% csrf_token %}
+                <button class="org-button org-button-secondary" style="padding:3px 10px;font-size:11px;" type="submit">Delete</button>
+              </form>
+            </td>
           </tr>
           {% empty %}
-          <tr><td colspan="{{ teams|length|add:3 }}">No injects yet.</td></tr>
+          <tr><td colspan="{{ teams|length|add:4 }}" style="text-align:center;color:#999;padding:20px;">No injects yet.</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
 </div>
+
+<script>
+const LIBRARY = {{ library|safe }};
+
+function renderLibrary(items) {
+  const tbody = document.getElementById('lib-body');
+  tbody.innerHTML = '';
+  items.forEach(item => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><code>${item.id}</code></td>
+      <td>${item.category}</td>
+      <td>${item.subject}</td>
+      <td>${item.max_point_value}</td>
+      <td>${item.duration_minutes}m</td>
+      <td style="text-align:right;">
+        <button class="org-button" style="padding:4px 10px;font-size:11px;" onclick="useInject(${JSON.stringify(item).replace(/"/g, '&quot;')})">Use</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function filterLibrary() {
+  const q    = document.getElementById('lib-search').value.toLowerCase();
+  const cat  = document.getElementById('lib-category').value;
+  const filtered = LIBRARY.filter(item =>
+    (!cat || item.category === cat) &&
+    (!q   || item.subject.toLowerCase().includes(q) || item.body.toLowerCase().includes(q) || item.id.toLowerCase().includes(q))
+  );
+  renderLibrary(filtered);
+}
+
+function useInject(item) {
+  document.getElementById('id_title').value = item.subject;
+  document.getElementById('id_description').value = item.body;
+  document.getElementById('id_points').value = item.max_point_value;
+  document.getElementById('inject-library').style.display = 'none';
+  document.getElementById('inject-form').scrollIntoView({behavior:'smooth'});
+}
+
+renderLibrary(LIBRARY);
+</script>
 
 {% endblock %}

@@ -1,121 +1,535 @@
-/* Restore link behavior — style.css's `a { all: unset }` breaks Django admin's UI */
-#header a,
-#content a,
-#nav-sidebar a,
-.module a,
-.object-tools a,
-.submit-row a,
-.paginator a,
-.breadcrumbs a,
-#user-tools a {
-  color: #e21833;
+/* =============================================================================
+   Palisade Admin Theme
+   Design language: mirrors the organizer portal exactly.
+   Colors: red #e21833 | dark-red #a01226 | gold #ffd200 | row1 #f8de74 | row2 #f7e9af
+   Cards: white bg, red header bar, shadow rgba(149,157,165,.2) 0 8px 24px, radius 5px
+   ============================================================================= */
+
+/* ── 1. Anti-dark-mode: override Django's CSS custom properties ────────────── */
+:root,
+html[data-theme="dark"],
+html[data-theme="light"] {
+  --primary:               #e21833;
+  --accent:                #a01226;
+  --secondary:             #a01226;
+  --primary-fg:            #fff;
+  --body-fg:               #1a1a1a;
+  --body-bg:               #e6e6e6;
+  --body-quiet-color:      #666;
+  --body-loud-color:       #000;
+  --header-bg:             #e21833;
+  --header-link-color:     #fff;
+  --breadcrumbs-fg:        #fff;
+  --breadcrumbs-link-fg:   #fff;
+  --breadcrumbs-bg:        #a01226;
+  --link-fg:               #e21833;
+  --link-hover-color:      #a01226;
+  --link-selected-fg:      #a01226;
+  --hairline-color:        #e8e8e8;
+  --border-color:          #ccc;
+  --error-fg:              #e21833;
+  --darkened-bg:           #f8f8f8;
+  --selected-bg:           #e4e4e4;
+  --selected-row:          #ffd200;
+  --button-fg:             #fff;
+  --button-bg:             #e21833;
+  --button-hover-bg:       #a01226;
+  --default-button-bg:     #a01226;
+  --default-button-hover-bg: #7a0d1c;
+  --close-button-bg:       #888;
+  --close-button-hover-bg: #747474;
+  --delete-button-bg:      #555;
+  --delete-button-hover-bg:#333;
+  --object-tools-fg:       #fff;
+  --object-tools-bg:       #888;
+  --object-tools-hover-bg: #747474;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary: #e21833; --accent: #a01226; --secondary: #a01226;
+    --primary-fg: #fff; --body-fg: #1a1a1a; --body-bg: #e6e6e6;
+    --header-bg: #e21833; --breadcrumbs-bg: #a01226;
+    --link-fg: #e21833; --darkened-bg: #f8f8f8;
+    --selected-bg: #e4e4e4; --selected-row: #ffd200;
+    --button-bg: #e21833; --button-hover-bg: #a01226;
+    --hairline-color: #e8e8e8; --border-color: #ccc;
+  }
+}
+
+/* ── 2. Base layout ─────────────────────────────────────────────────────────── */
+body {
+  background: #e6e6e6 !important;
+  color: #1a1a1a !important;
+  font-family: 'Source Sans Pro', Helvetica, Arial, Verdana, sans-serif !important;
+}
+#container { min-height: 100vh; }
+#content {
+  background: transparent !important;
+  padding: 24px 30px !important;
+  color: #1a1a1a !important;
+}
+#content-main { float: none !important; width: 100% !important; }
+#content h1, #content h2, #content h3, #content-title { color: #1a1a1a !important; }
+/* "Site administration" and "Select X to change" page titles */
+#content > h1, #content-title { font-size: 22px !important; margin-bottom: 20px !important; }
+
+/* ── 3. Restore links (style.css wipes them with `a { all: unset }`) ────────── */
+#header a, #content a, #nav-sidebar a, .module a, .object-tools a,
+.submit-row a, .paginator a, .breadcrumbs a, #user-tools a,
+a.addlink, a.changelink, a.deletelink {
   text-decoration: none;
   cursor: pointer;
 }
-#content a:hover, .module a:hover, #nav-sidebar a:hover {
-  text-decoration: underline;
-}
+#content a, .module a { color: #e21833; }
+#content a:hover, .module a:hover { text-decoration: underline; }
 
-/* Header — direct override beats Django's dark-mode variable cascade */
-#header,
-html[data-theme="dark"] #header,
-html[data-theme="light"] #header {
+/* ── 4. Header ──────────────────────────────────────────────────────────────── */
+#header {
   background: #e21833 !important;
   color: #fff !important;
   box-shadow: 0 0 10px rgba(0,0,0,.5);
+  padding: 0 30px !important;
+  display: flex !important;
+  align-items: center !important;
+  min-height: 6vh;
 }
+#site-name { margin: 0; }
 #site-name a, #site-name a:link, #site-name a:visited {
   color: #ffd200 !important;
-}
-#user-tools a {
-  color: #fff !important;
-}
-#user-tools a:hover {
-  color: #ffd200 !important;
-}
-
-/* Nav links — scoped class, no collision with style.css's .navbar */
-#nav-global {
-  display: flex;
-  align-items: center;
-}
-#nav-global .admin-nav {
-  display: flex;
-  gap: 24px;
-  list-style: none;
-  margin: 0 0 0 30px;
-  padding: 0;
-}
-#nav-global .admin-nav li a {
   font-weight: 700;
+  font-size: 20px;
+  text-decoration: none !important;
+}
+#user-tools {
   color: #fff !important;
-  letter-spacing: .02em;
   font-size: 13px;
-  white-space: nowrap;
+  margin-left: auto;
 }
-#nav-global .admin-nav li a:hover {
-  text-decoration: underline;
-}
+#user-tools a, #user-tools a:link, #user-tools a:visited { color: #fff !important; }
+#user-tools a:hover { color: #ffd200 !important; text-decoration: underline; }
 
-/* Breadcrumbs + page title contrast */
+/* ── 5. Nav-global (inline in header) ──────────────────────────────────────── */
+.admin-nav {
+  display: flex !important;
+  gap: 24px !important;
+  list-style: none !important;
+  margin: 0 0 0 30px !important;
+  padding: 0 !important;
+}
+.admin-nav li { list-style: none !important; }
+.admin-nav li a, .admin-nav li a:visited {
+  font-weight: 700 !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  letter-spacing: .02em !important;
+  white-space: nowrap !important;
+  text-decoration: none !important;
+}
+.admin-nav li a:hover { text-decoration: underline !important; color: #fff !important; }
+
+/* ── 6. Breadcrumbs ─────────────────────────────────────────────────────────── */
 .breadcrumbs {
   background: #a01226 !important;
   color: #fff !important;
+  padding: 8px 30px !important;
+  font-size: 13px !important;
 }
-.breadcrumbs a {
-  color: #fff !important;
-}
-#content h1, #content-title {
+.breadcrumbs a, .breadcrumbs a:visited { color: #fff !important; }
+.breadcrumbs a:hover { text-decoration: underline !important; }
+
+/* ── 7. Index page — app module cards ──────────────────────────────────────── */
+/* Each app block is a white card with a red header (caption = header) */
+#content-main .module {
+  background: #fff !important;
+  border-radius: 5px !important;
+  overflow: hidden !important;
+  box-shadow: rgba(149,157,165,.2) 0 8px 24px !important;
+  border: none !important;
+  margin-bottom: 20px !important;
+  padding: 0 !important;
   color: #1a1a1a !important;
 }
-
-/* App-list modules as white cards */
-#content .module {
-  background: #fff;
-  border-radius: 5px;
-  overflow: hidden;
-  box-shadow: rgba(149,157,165,.2) 0 8px 24px;
-  border: none;
-  margin-bottom: 20px;
-}
-#content .module h2,
-#content .module caption {
+/* The app name caption acts as the card header */
+#content-main .module > table > caption,
+#content-main .module caption {
   background: #e21833 !important;
   color: #fff !important;
-  padding: 10px 17px;
-  font-size: 16px;
+  text-align: left !important;
+  padding: 10px 18px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  caption-side: top !important;
 }
-#content .module table {
-  width: 100%;
-  border-collapse: collapse;
-}
-#content .module table th,
-#content .module table td {
-  padding: 8px 17px;
-}
+#content-main .module caption a,
+#content-main .module caption a:visited { color: #fff !important; font-weight: 700; }
+#content-main .module caption a:hover  { color: #ffd200 !important; text-decoration: none !important; }
 
-/* Changelist/result tables — gold accent from dashboard */
-#changelist table thead th,
-.results table thead th {
-  background: #ffd200 !important;
-}
-#changelist table tbody tr,
-.results table tbody tr {
+/* ── 8. Index page — model rows: gold alternating table ────────────────────── */
+#content-main .module table { width: 100%; border-collapse: collapse; }
+#content-main .module table tbody tr {
   background: #f8de74 !important;
+  color: #1a1a1a !important;
 }
-#changelist table tbody tr:nth-child(even),
-.results table tbody tr:nth-child(even) {
+#content-main .module table tbody tr:nth-child(even) {
   background: #f7e9af !important;
 }
+#content-main .module table tbody th,
+#content-main .module table tbody td {
+  padding: 8px 18px !important;
+  color: #1a1a1a !important;
+  background: transparent !important;
+  font-size: 14px;
+}
+#content-main .module table tbody th { font-weight: 600; }
+/* Add / Change links */
+a.addlink    { color: #e21833 !important; font-weight: 700; }
+a.changelink { color: #e21833 !important; font-weight: 700; }
+a.addlink:hover, a.changelink:hover { text-decoration: underline !important; }
 
-/* Buttons */
-.button, input[type=submit], input[type=button], .submit-row input {
+/* ── 9. Changelist — result table (#result_list) ───────────────────────────── */
+#changelist {
+  background: #fff !important;
+  border-radius: 5px !important;
+  box-shadow: rgba(149,157,165,.2) 0 8px 24px !important;
+  padding: 18px !important;
+  margin-top: 0 !important;
+}
+#result_list, #changelist table {
+  width: 100%;
+  border-collapse: collapse !important;
+}
+#result_list thead th, #changelist table thead th {
+  background: #ffd200 !important;
+  color: #1a1a1a !important;
+  padding: 8px 12px !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+}
+#result_list thead th a, #changelist table thead th a {
+  color: #1a1a1a !important;
+  font-weight: 700 !important;
+}
+#result_list tbody tr, #changelist table tbody tr {
+  background: #f8de74 !important;
+  color: #1a1a1a !important;
+}
+#result_list tbody tr:nth-child(even), #changelist table tbody tr:nth-child(even) {
+  background: #f7e9af !important;
+}
+#result_list tbody td, #result_list tbody th,
+#changelist table tbody td, #changelist table tbody th {
+  padding: 8px 12px !important;
+  color: #1a1a1a !important;
+  background: transparent !important;
+}
+#result_list tbody td a, #changelist table tbody td a { color: #e21833 !important; }
+#result_list tbody td a:hover { text-decoration: underline !important; }
+/* Selected row checkbox highlight */
+#result_list tbody tr.selected { background: #ffd200 !important; }
+
+/* ── 10. Object tools — "ADD X +" button ───────────────────────────────────── */
+.object-tools {
+  float: right;
+  margin: 0 0 10px !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+.object-tools li { list-style: none !important; display: inline-block; }
+.object-tools a, .object-tools a:visited {
+  display: inline-block;
   background: #e21833 !important;
   color: #fff !important;
-  border-radius: 3px;
-  border: none;
-  padding: 8px 15px;
+  padding: 8px 15px !important;
+  border-radius: 3px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  text-decoration: none !important;
 }
-.button:hover, input[type=submit]:hover {
+.object-tools a:hover { background: #a01226 !important; text-decoration: none !important; }
+/* History/view-on-site links use secondary style */
+.object-tools a.viewsitelink,
+.object-tools a.historylink {
+  background: #fff !important;
+  color: #e21833 !important;
+  border: 1px solid #e21833 !important;
+}
+.object-tools a.viewsitelink:hover,
+.object-tools a.historylink:hover { background: #fdeceb !important; }
+
+/* ── 11. Search bar ─────────────────────────────────────────────────────────── */
+#changelist-search {
+  background: transparent !important;
+  padding: 0 0 14px !important;
+  border: none !important;
+}
+#changelist-search label { font-weight: 700; font-size: 13px; color: #1a1a1a; margin-right: 6px; }
+#changelist-search input[type=text] {
+  padding: 7px 10px !important;
+  border-radius: 4px !important;
+  border: 1px solid #ccc !important;
+  background: #f7f7f7 !important;
+  color: #1a1a1a !important;
+  font-size: 14px !important;
+  font-family: inherit !important;
+  width: 240px;
+}
+#changelist-search input[type=text]:focus {
+  border-color: #e21833 !important;
+  outline: none !important;
+  background: #fff !important;
+}
+
+/* ── 12. Actions bar ────────────────────────────────────────────────────────── */
+.actions {
+  background: #f7f7f7 !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 4px !important;
+  padding: 7px 10px !important;
+  margin-bottom: 10px !important;
+  color: #1a1a1a !important;
+}
+.actions label, .actions select { color: #1a1a1a !important; font-size: 13px; }
+
+/* ── 13. Left nav-sidebar ───────────────────────────────────────────────────── */
+#nav-sidebar {
+  background: #fff !important;
+  border-right: 1px solid #e0e0e0 !important;
+}
+/* Sticky container (search + nav list) */
+#nav-sidebar .sticky { background: #fff !important; }
+/* Sidebar search */
+#nav-sidebar #nav-filter { padding: 10px 14px; }
+#nav-sidebar #nav-filter input[type=text] {
+  width: 100%;
+  padding: 6px 10px !important;
+  border-radius: 4px !important;
+  border: 1px solid #ccc !important;
+  background: #f7f7f7 !important;
+  color: #1a1a1a !important;
+  font-size: 13px !important;
+}
+/* Each app section in the sidebar */
+#nav-sidebar .module {
+  background: #fff !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  margin-bottom: 0 !important;
+  border-bottom: 1px solid #e8e8e8 !important;
+}
+/* App name (caption) = gold header, like org-table th */
+#nav-sidebar .module caption,
+#nav-sidebar .module table caption {
+  background: #ffd200 !important;
+  color: #1a1a1a !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: .05em !important;
+  text-transform: uppercase !important;
+  padding: 5px 14px !important;
+  text-align: left !important;
+  caption-side: top !important;
+}
+#nav-sidebar .module caption a { color: #1a1a1a !important; }
+/* Model rows */
+#nav-sidebar .module table { width: 100%; border-collapse: collapse; }
+#nav-sidebar .module table tbody tr { background: #fff !important; }
+#nav-sidebar .module table tbody th,
+#nav-sidebar .module table tbody td {
+  padding: 5px 14px !important;
+  background: transparent !important;
+  color: #1a1a1a !important;
+  font-size: 13px !important;
+}
+#nav-sidebar a, #nav-sidebar a:visited { color: #e21833 !important; }
+#nav-sidebar a:hover { text-decoration: underline !important; }
+#nav-sidebar .current-model > th > a { font-weight: 700 !important; }
+#nav-sidebar tr:hover td, #nav-sidebar tr:hover th { background: #f7f7f7 !important; }
+
+/* ── 14. Right filter sidebar ───────────────────────────────────────────────── */
+#changelist-filter {
+  background: #fff !important;
+  border-radius: 5px !important;
+  box-shadow: rgba(149,157,165,.2) 0 8px 24px !important;
+  border: none !important;
+  overflow: hidden !important;
+}
+#changelist-filter h2 {
+  background: #e21833 !important;
+  color: #fff !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  padding: 10px 14px !important;
+  margin: 0 !important;
+}
+#changelist-filter h3 {
+  background: #ffd200 !important;
+  color: #1a1a1a !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: .05em !important;
+  text-transform: uppercase !important;
+  padding: 5px 14px !important;
+  margin: 0 !important;
+}
+#changelist-filter ul { padding: 6px 14px 10px !important; list-style: none !important; margin: 0 !important; }
+#changelist-filter li { list-style: none !important; margin: 3px 0 !important; }
+#changelist-filter li a, #changelist-filter li a:visited { color: #e21833 !important; font-size: 13px; }
+#changelist-filter li a:hover { text-decoration: underline !important; }
+#changelist-filter li.selected > a { font-weight: 700 !important; }
+
+/* ── 15. Change form — fieldsets ────────────────────────────────────────────── */
+/* Each fieldset = org-card: red header, white body */
+fieldset.module {
+  background: #fff !important;
+  border-radius: 5px !important;
+  overflow: hidden !important;
+  box-shadow: rgba(149,157,165,.2) 0 8px 24px !important;
+  border: none !important;
+  margin-bottom: 20px !important;
+  padding: 0 !important;
+  color: #1a1a1a !important;
+}
+fieldset.module h2 {
+  background: #e21833 !important;
+  color: #fff !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  padding: 10px 18px !important;
+  margin: 0 !important;
+}
+fieldset.module .form-row {
+  padding: 10px 18px !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+  background: #fff !important;
+  color: #1a1a1a !important;
+}
+fieldset.module .form-row:last-child { border-bottom: none !important; }
+.form-row label { font-weight: 700; font-size: 13px; color: #1a1a1a; }
+.form-row p.help, .help { color: #777 !important; font-size: 12px !important; margin-top: 3px; }
+
+/* ── 16. Form inputs ────────────────────────────────────────────────────────── */
+input[type=text], input[type=password], input[type=email], input[type=url],
+input[type=number], input[type=tel], input[type=date], input[type=datetime-local],
+input[type=time], textarea, select,
+.vTextField, .vDateField, .vTimeField {
+  padding: 8px 10px !important;
+  border-radius: 5px !important;
+  border: 1px solid #ccc !important;
+  background: #f7f7f7 !important;
+  color: #1a1a1a !important;
+  font-size: 14px !important;
+  font-family: inherit !important;
+}
+input[type=text]:focus, input[type=password]:focus, input[type=email]:focus,
+textarea:focus, select:focus {
+  border-color: #e21833 !important;
+  outline: none !important;
+  background: #fff !important;
+}
+textarea { min-height: 80px; }
+select[multiple] { min-height: 100px; }
+
+/* ── 17. Submit row ─────────────────────────────────────────────────────────── */
+.submit-row {
+  background: #fff !important;
+  border: none !important;
+  border-top: 1px solid #e8e8e8 !important;
+  padding: 12px 18px !important;
+  box-shadow: none !important;
+  border-radius: 0 0 5px 5px !important;
+  display: flex !important;
+  gap: 10px !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+}
+
+/* ── 18. Buttons ────────────────────────────────────────────────────────────── */
+.button, input[type=submit], input[type=button], .submit-row input[type=submit] {
+  display: inline-block !important;
+  background: #e21833 !important;
+  color: #fff !important;
+  border-radius: 3px !important;
+  border: none !important;
+  padding: 8px 15px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+}
+.button:hover, input[type=submit]:hover, input[type=button]:hover {
   background: #a01226 !important;
+}
+/* Delete link — secondary style */
+.deletelink, a.deletelink, .deletelink-box a {
+  display: inline-block;
+  background: #fff !important;
+  color: #555 !important;
+  border: 1px solid #ccc !important;
+  border-radius: 3px;
+  padding: 8px 15px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.deletelink:hover, a.deletelink:hover { background: #f7f7f7 !important; }
+
+/* ── 19. Inline admin ───────────────────────────────────────────────────────── */
+.inline-group {
+  background: #fff !important;
+  border-radius: 5px !important;
+  box-shadow: rgba(149,157,165,.2) 0 8px 24px !important;
+  border: none !important;
+  overflow: hidden !important;
+  margin-bottom: 20px !important;
+}
+.inline-group h2 {
+  background: #e21833 !important;
+  color: #fff !important;
+  padding: 10px 18px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+}
+.inline-related h3 {
+  background: #ffd200 !important;
+  color: #1a1a1a !important;
+  padding: 6px 18px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+}
+.tabular { background: #fff !important; }
+.tabular thead th { background: #ffd200 !important; color: #1a1a1a !important; padding: 8px 12px !important; }
+.tabular tbody tr { background: #f8de74 !important; }
+.tabular tbody tr:nth-child(even) { background: #f7e9af !important; }
+.tabular td, .tabular th { padding: 8px 12px !important; color: #1a1a1a !important; background: transparent !important; }
+.add-row td { background: #fff !important; padding: 8px 18px !important; }
+.add-row a { color: #e21833 !important; font-weight: 700; }
+
+/* ── 20. Error and message banners ──────────────────────────────────────────── */
+.errornote {
+  background: #fdeceb !important;
+  border: 1px solid #e21833 !important;
+  border-radius: 4px !important;
+  color: #e21833 !important;
+  padding: 10px 14px !important;
+  margin-bottom: 14px;
+}
+ul.errorlist { list-style: none !important; padding: 0 !important; margin: 4px 0 0 !important; }
+ul.errorlist li { color: #e21833 !important; font-size: 12px !important; list-style: none !important; }
+
+/* ── 21. Paginator ──────────────────────────────────────────────────────────── */
+.paginator {
+  color: #1a1a1a !important;
+  background: transparent !important;
+  padding: 10px 0 !important;
+  font-size: 13px !important;
+}
+.paginator a, .paginator a:visited { color: #e21833 !important; }
+.paginator a:hover { text-decoration: underline !important; }
+.paginator .this-page {
+  font-weight: 700;
+  background: #e21833 !important;
+  color: #fff !important;
+  padding: 2px 8px !important;
+  border-radius: 3px !important;
 }

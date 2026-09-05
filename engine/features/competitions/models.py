@@ -64,6 +64,10 @@ class MachineTemplate(models.Model):
   os_family = models.CharField(max_length=20, choices=OS_FAMILY_CHOICES, default="linux")
   role = models.CharField(max_length=100, blank=True)
   description = models.TextField(blank=True)
+  proxmox_vmid = models.PositiveIntegerField(
+      null=True, blank=True,
+      help_text="ProxMox template VMID (e.g. 9001 for tmpl-debian8)"
+  )
 
   def __str__(self):
     return self.name
@@ -76,3 +80,22 @@ class CompetitionMachine(models.Model):
 
   def __str__(self):
     return f"{self.quantity}x {self.machine_template.name} ({self.competition.name})"
+
+
+class ProvisionedMachine(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("running", "Running"),
+        ("stopped", "Stopped"),
+        ("error", "Error"),
+    ]
+    competition = models.ForeignKey(Competition, on_delete=models.CASCADE, related_name="provisioned_machines")
+    team = models.ForeignKey("teams.Team", on_delete=models.CASCADE, related_name="vms")
+    machine_template = models.ForeignKey(MachineTemplate, on_delete=models.CASCADE)
+    vmid = models.PositiveIntegerField(unique=True)
+    name = models.CharField(max_length=100)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} (VMID {self.vmid})"

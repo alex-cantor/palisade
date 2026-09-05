@@ -14,6 +14,7 @@ MarkupSafe==3.0.3
 ordered-set==4.1.0
 pillow==12.3.0
 psycopg2-binary==2.9.12
+proxmoxer==2.0.1
 PyLaTeX==1.4.2
 python-dotenv==1.2.2
 PyTinyTeX==0.5.1

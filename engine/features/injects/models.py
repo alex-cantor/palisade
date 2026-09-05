@@ -6,6 +6,7 @@ from features.competitions.models import Competition
 class Inject(models.Model):
   competition = models.ForeignKey(Competition, on_delete=models.CASCADE, related_name="injects", null=True, blank=True)
   title = models.CharField(max_length=200)
+  description = models.TextField(blank=True)
   start_time = models.DateTimeField()
   due_time = models.DateTimeField()
   points = models.IntegerField()

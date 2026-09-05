@@ -12,7 +12,15 @@
   <div class="org-card-body">
     <form method="post">
       {% csrf_token %}
-      {{ form.as_p }}
+      <div class="org-form-row">
+        <label for="{{ form.title.id_for_label }}">Title*</label>
+        {{ form.title }}
+      </div>
+      <div class="org-form-row">
+        <label for="{{ form.scheduled_for.id_for_label }}">Schedule For</label>
+        {{ form.scheduled_for }}
+        <p class="org-hint">Leave blank to post immediately. Competitors won't see it until the scheduled time.</p>
+      </div>
       <button class="org-button" type="submit">Post</button>
     </form>
   </div>
@@ -20,14 +28,21 @@
 
 <div class="org-card">
   <div class="org-card-header"><h2>History</h2></div>
-  <div class="org-card-body">
-    <table class="org-table">
-      <thead><tr><th>Title</th><th>Published</th></tr></thead>
+  <div class="org-card-body" style="padding:0;">
+    <table class="org-table" style="width:100%;">
+      <thead>
+        <tr><th>Title</th><th>Posted</th><th>Scheduled For</th><th>Visible</th></tr>
+      </thead>
       <tbody>
-        {% for announcement in announcements %}
-        <tr><td>{{ announcement.title }}</td><td>{{ announcement.published_at|date:"m/d H:i" }} UTC</td></tr>
+        {% for a in announcements %}
+        <tr>
+          <td>{{ a.title }}</td>
+          <td>{{ a.published_at|date:"m/d H:i" }} UTC</td>
+          <td>{% if a.scheduled_for %}{{ a.scheduled_for|date:"m/d H:i" }} UTC{% else %}<span style="color:#999;">—</span>{% endif %}</td>
+          <td>{% if not a.scheduled_for %}<span style="color:#2e7d32;font-weight:700;">Now</span>{% else %}<span style="color:#b8860b;font-weight:700;">Scheduled</span>{% endif %}</td>
+        </tr>
         {% empty %}
-        <tr><td colspan="2">No announcements yet.</td></tr>
+        <tr><td colspan="4" style="text-align:center;color:#999;padding:20px;">No announcements yet.</td></tr>
         {% endfor %}
       </tbody>
     </table>

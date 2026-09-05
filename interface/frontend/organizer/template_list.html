@@ -1,0 +1,51 @@
+{% extends "organizer/base.html" %}
+{% block title %}Machine Templates{% endblock %}
+{% block content %}
+
+<div class="org-page-header">
+  <h1>Machine Templates</h1>
+  <a class="org-button" href="{% url 'organizer:template_create' %}">+ New Template</a>
+</div>
+
+{% if templates %}
+<div class="org-card">
+  <div class="org-card-header"><h2>All Templates</h2></div>
+  <div class="org-card-body" style="padding:0;">
+    <table class="org-table" style="width:100%;">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>OS Family</th>
+          <th>Role</th>
+          <th>ProxMox VMID</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in templates %}
+        <tr>
+          <td><strong>{{ t.name }}</strong></td>
+          <td>{{ t.get_os_family_display }}</td>
+          <td>{{ t.role|default:"—" }}</td>
+          <td>{% if t.proxmox_vmid %}<code>{{ t.proxmox_vmid }}</code>{% else %}<span style="color:#999;">not set</span>{% endif %}</td>
+          <td style="text-align:right;white-space:nowrap;">
+            <a class="org-button" style="padding:5px 12px;font-size:12px;" href="{% url 'organizer:template_edit' t.pk %}">Edit</a>
+            <form method="post" action="{% url 'organizer:template_delete' t.pk %}" style="display:inline;" onsubmit="return confirm('Delete {{ t.name }}?');">
+              {% csrf_token %}
+              <button class="org-button org-button-secondary" style="padding:5px 12px;font-size:12px;" type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="org-empty-state">
+  <p class="org-empty-title">No templates yet.</p>
+  <p class="org-empty-subtitle"><a href="{% url 'organizer:template_create' %}">Add your first machine template</a></p>
+</div>
+{% endif %}
+
+{% endblock %}

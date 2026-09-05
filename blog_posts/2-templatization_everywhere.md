@@ -10,9 +10,9 @@ There are two main ways we can spawn VMs in ProxMox (PVE): we can build them fro
 
 ## Choosing OSs to Clone
 
-I knew I wanted to be able to prepare my team for anything, from old to new, from common to esoteric. So, I formed a list of the following OSs/distros which I wanted to make a template of (templatize)
+I knew I wanted to be able to prepare my team for anything, from old to new, from common to esoteric. So, I formed a list of the following OSs/distros which I wanted to make a template of (templatize):
 
-Linux
+**Linux**
 - Debian
 - Debian 8
 - Debian 9
@@ -35,7 +35,7 @@ Linux
 - Alpine Linux
 - AlmaLinux
 
-Windows
+**Windows**
 - Windows Server
 	- Windows Server 2016
 	- Windows Server 2019
@@ -45,7 +45,7 @@ Windows
 	- Windows 10
 	- Windows 11
 
-Firewalling
+**Firewalling**
 - OPNsense
 - pfSense
 
@@ -271,7 +271,75 @@ So, clearly, the two ISOs serve completely different purposes. As you may or may
 
 As I began working on this project, I was planning on implementing (and had done so to an extent in my first iteration) the network configuration (including, namely, provisioning the VMs) with only qm. I mean.. qm is insanely powerful, so why not do it? Well, I ultimately did it because it is not as convenient as using Python with PVE’s APIs and proxmoxer. Plus, I had not yet implemented vlanning for teams (which I knew I would have to do) and it would be just a few more lines of code.
 
-(...)
+### Interacting with PVE via Python
+
+We have two main options here: we can either use PVE's REST API (via raw requests) or [proxmoxer](https://proxmoxer.github.io/docs/2.0/), a wrapper around said API.
+
+Connecting to PVE is quite simple:
+```python
+from proxmoxer import ProxmoxAPI
+from django.conf import settings
+
+cfg = settings.PROXMOX
+prox = ProxmoxAPI(
+    cfg["host"],
+    user=cfg["user"],
+    token_name=cfg["token_name"],
+    token_value=cfg["token_value"],
+    verify_ssl=cfg["verify_ssl"],
+)
+```
+
+> There are two ways in which we can authenticate to PVE: `username:password` and API tokens. For obvious reasons, tokens are much better. You can create one at Datacenter --> Permissions --> API Tokens --> Add. At a minimum, you'll want to configure it with `VM.Clone`, `VM.Config`, and `VM.PowerMgmt`.
+
+### Cloning a Template
+
+With templates sitting at VMIDs 9000–9027, cloning one for a team is a few lines.
+```python
+task_id = prox.nodes(node).qemu(template_vmid).clone.post(
+    newid=new_vmid,
+    name=vm_name,
+    full=1,
+    target=node,
+)
+```
+
+Of note, the clone is **asynchronous**. `clone.post()` returns a task ID immediately, so you'll have to poll until it's done before you can configure or start the VM.
+```python
+import time
+
+def wait_for_task(prox, node, task_id, timeout=300):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        status = prox.nodes(node).tasks(task_id).status.get()
+        if status["status"] == "stopped":
+            if status.get("exitstatus") == "OK":
+                return
+            raise RuntimeError(f"Task failed: {status.get('exitstatus')}")
+        time.sleep(3)
+    raise TimeoutError(f"Task {task_id} timed out")
+```
+
+### Utilizing cloud-init
+
+After cloning, we can use cloud-init to configure the VM.
+```python
+prox.nodes(node).qemu(new_vmid).config.post(
+    ciuser=f"team{team_number}",
+    cipassword=team_password,
+    ipconfig0="ip=dhcp",
+    net0=f"virtio,bridge={bridge}",
+)
+prox.nodes(node).qemu(new_vmid).status.start.post()
+```
+
+### VMID Numbering Scheme
+
+Even though this bit is abstracted away from the user, it is still a nice feature considering there is certainly possibility for hopping in PVE to figure stuff out. As such, I decided on the following schema:
+- Templates: 9000–9099 (created by `create_templates.sh`)  
+- Competition VMs: `5 + TT + CC`, where TT is the two-digit team number and CC is a per-team counter  
+  - Team 1: 50100, 50101, 50102, ...  
+  - Team 2: 50200, 50201, 50202, ...
 
 In the future, I may move to terraform as it is declarative (you tell it what you want and it does it--and it can be used on a ton of platforms, not just ProxMox. However, after a couple of days of researching terraform, I’ve come to realize it isn’t something I want to learn at the moment (I want to stay focused on learning the current technologies), although I certainly see room for it in the future.
 

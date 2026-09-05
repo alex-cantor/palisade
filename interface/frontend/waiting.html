@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Palisade</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+  </head>
+  <body>
+    <nav>
+      <ul class="navbar">
+        <div></div>
+        <div>
+          <li><a href="{% url 'logout' %}">LOGOUT</a></li>
+        </div>
+      </ul>
+    </nav>
+    <div class="feed">
+      <div class="standard-dashboard-wrapper" style="max-width:500px;width:90%;margin-top:60px;">
+        <div class="dashboard-header"><h1>Palisade</h1></div>
+        <div style="padding:40px 20px;text-align:center;background:#fff;">
+          <p style="font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:10px;">Waiting for competition to start.</p>
+          <p style="color:#666;font-size:14px;">Your account is set up. Check back once the organizer has provisioned infrastructure and gone live.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

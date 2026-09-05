@@ -29,34 +29,57 @@ create_lin_templates() {
 
     # make the templates
     declare -A templates
+    declare -A template_names
 
-    templates[9000] = "debian-8-genericcloud-amd64.qcow2"
-    templates[9001] = "debian-9-genericcloud-amd64.qcow2"
-    templates[9002] = "debian-10-genericcloud-amd64.qcow2"
-    templates[9003] = "debian-11-genericcloud-amd64.qcow2"
-    templates[9004] = "debian-12-genericcloud-amd64.qcow2"
+    templates[9000]="debian-8-genericcloud-amd64.qcow2"
+    templates[9001]="debian-9-genericcloud-amd64.qcow2"
+    templates[9002]="debian-10-genericcloud-amd64.qcow2"
+    templates[9003]="debian-11-genericcloud-amd64.qcow2"
+    templates[9004]="debian-12-genericcloud-amd64.qcow2"
 
-    templates[9010] = "ubuntu-1404-cloudimg-amd64.img"
-    templates[9011] = "ubuntu-1604-cloudimg-amd64.img"
-    templates[9012] = "ubuntu-1804-cloudimg-amd64.img"
-    templates[9013] = "ubuntu-2204-cloudimg-amd64.img"
-    templates[9014] = "ubuntu-2404-cloudimg-amd64.img"
+    templates[9010]="ubuntu-1404-cloudimg-amd64.img"
+    templates[9011]="ubuntu-1604-cloudimg-amd64.img"
+    templates[9012]="ubuntu-1804-cloudimg-amd64.img"
+    templates[9013]="ubuntu-2204-cloudimg-amd64.img"
+    templates[9014]="ubuntu-2404-cloudimg-amd64.img"
 
-    templates[9020] = "centos6-genericcloud-amd64.qcow2"
-    templates[9021] = "centos7-genericcloud-amd64.qcow2"
-    templates[9022] = "rocky9-genericcloud-amd64.qcow2"
-    templates[9023] = "almalinux8-genericcloud-amd64.qcow2"
-    templates[9024] = "opensuse-15-cloud.qcow2"
-    templates[9025] = "fedora32-cloudbase-amd64.qcow2"
-    templates[9026] = "arch-cloudimg-amd64.qcow2"
-    templates[9027] = "alpine-cloudimg-amd64.qcow2"
+    templates[9020]="centos6-genericcloud-amd64.qcow2"
+    templates[9021]="centos7-genericcloud-amd64.qcow2"
+    templates[9022]="rocky9-genericcloud-amd64.qcow2"
+    templates[9023]="almalinux8-genericcloud-amd64.qcow2"
+    templates[9024]="opensuse-15-cloud.qcow2"
+    templates[9025]="fedora32-cloudbase-amd64.qcow2"
+    templates[9026]="arch-cloudimg-amd64.qcow2"
+    templates[9027]="alpine-cloudimg-amd64.qcow2"
+
+    template_names[9000]="tmpl-debian8"
+    template_names[9001]="tmpl-debian9"
+    template_names[9002]="tmpl-debian10"
+    template_names[9003]="tmpl-debian11"
+    template_names[9004]="tmpl-debian12"
+
+    template_names[9010]="tmpl-ubuntu1404"
+    template_names[9011]="tmpl-ubuntu1604"
+    template_names[9012]="tmpl-ubuntu1804"
+    template_names[9013]="tmpl-ubuntu2204"
+    template_names[9014]="tmpl-ubuntu2404"
+
+    template_names[9020]="tmpl-centos6"
+    template_names[9021]="tmpl-centos7"
+    template_names[9022]="tmpl-rocky9"
+    template_names[9023]="tmpl-almalinux8"
+    template_names[9024]="tmpl-opensuse15"
+    template_names[9025]="tmpl-fedora32"
+    template_names[9026]="tmpl-arch"
+    template_names[9027]="tmpl-alpine"
 
     for id in "${!templates[@]}"; do
     downloaded_file="${templates[$id]}"
+    vm_name="${template_names[$id]}"
     if [ -f "$downloaded_file" ]; then
         echo "Creating template for $downloaded_file with ID $id"
-        qm create "$id" --name "${downloaded_file%.*}" --memory 2048 --net0 virtio,bridge=vmbr0 --ide2 local:cloudinit --boot c --scsihw virtio-scsi-pci --scsi0 local-lvm:0,import-from="$downloaded_file"
-        qm set "$id" --serial0 socket --vga serial0
+        qm create "$id" --name "$vm_name" --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0 --ide2 local:cloudinit --boot c --scsihw virtio-scsi-pci --scsi0 local-lvm:0,import-from="$downloaded_file"
+        qm set "$id" --serial0 socket --vga serial0 --agent enabled=1
         qm set "$id" --ciuser clouduser --cipassword cloudpassword
         qm set "$id" --sshkey ~/.ssh/id_rsa.pub
         qm template "$id"
@@ -81,11 +104,11 @@ create_win_templates() {
     # make the templates
     declare -A templates
 
-    templates[9101] = "Win11_22H2_English_x64.iso"
-    templates[9102] = "WinServer2016_English_x64.iso"
-    templates[9103] = "WinServer2019_English_x64.iso"
-    templates[9104] = "WinServer2022_English_x64.iso"
-    templates[9105] = "WinServer2025_English_x64.iso"
+    templates[9101]="Win11_22H2_English_x64.iso"
+    templates[9102]="WinServer2016_English_x64.iso"
+    templates[9103]="WinServer2019_English_x64.iso"
+    templates[9104]="WinServer2022_English_x64.iso"
+    templates[9105]="WinServer2025_English_x64.iso"
 
     # TODO
 }

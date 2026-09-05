@@ -1,10 +1,17 @@
 <!-- interface/frontend/admin/base_site.html -->
 {% extends "admin/base.html" %}
 {% load static %}
+
 {% block extrastyle %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'style.css' %}" />
 <link rel="stylesheet" href="{% static 'admin_theme.css' %}" />
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+{# Force light mode regardless of OS/browser dark mode preference #}
+<script>document.documentElement.setAttribute('data-theme', 'light');</script>
 {% endblock %}
 
 {% block branding %}
@@ -12,7 +19,7 @@
 {% endblock %}
 
 {% block nav-global %}
-<nav>
+<nav style="display:flex;align-items:center;">
   <ul class="admin-nav">
     <li><a href="{% url 'organizer:competition_list' %}">ORGANIZER DASHBOARD</a></li>
     <li><a href="{% url 'admin:competitions_competition_changelist' %}">COMPETITIONS</a></li>
