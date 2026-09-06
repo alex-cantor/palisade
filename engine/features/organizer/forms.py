@@ -10,12 +10,16 @@ class CompetitionForm(forms.ModelForm):
     fields = [
       "name", "start_time", "end_time",
       "difficulty", "industry",
-      "scoring_interval_minutes",
     ]
     widgets = {
-      "start_time": forms.DateTimeInput(attrs={"type": "datetime-local"}),
-      "end_time":   forms.DateTimeInput(attrs={"type": "datetime-local"}),
+      "start_time": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
+      "end_time":   forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
     }
+
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.fields["start_time"].input_formats = ["%Y-%m-%dT%H:%M"]
+    self.fields["end_time"].input_formats = ["%Y-%m-%dT%H:%M"]
 
 
 class MachineTemplateForm(forms.ModelForm):

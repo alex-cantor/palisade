@@ -193,3 +193,30 @@ a { all: unset; cursor: pointer; }
   color: #555;
 }
 .org-kv-table td { padding: 8px 12px; }
+
+/* ── Toast notification system ─────────────────────────────────────────── */
+.toast-container { position: fixed; z-index: 9999; padding: 20px; display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 450px; pointer-events: none; }
+[data-position="tr"] { top: 0; right: 0; align-items: flex-end; }
+[data-position="tc"] { top: 0; left: 50%; transform: translateX(-50%); align-items: center; }
+[data-position="tl"] { top: 0; left: 0; align-items: flex-start; }
+[data-position="br"] { bottom: 0; right: 0; align-items: flex-end; flex-direction: column-reverse; }
+[data-position="bc"] { bottom: 0; left: 50%; transform: translateX(-50%); align-items: center; flex-direction: column-reverse; }
+[data-position="bl"] { bottom: 0; left: 0; align-items: flex-start; flex-direction: column-reverse; }
+
+.toast { position: relative; overflow: hidden; display: flex; gap: 12px; min-width: 320px; padding: 12px; border-radius: 5px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); pointer-events: auto; }
+.toast.toast-success { --toast-accent-color: #16a34a; background: #16a34a !important; color: #ffffff !important; }
+.toast.toast-error   { --toast-accent-color: #e21833; background: #e21833 !important; color: #ffffff !important; }
+.toast.toast-warning { --toast-accent-color: #f59e0b; background: #f59e0b !important; color: #ffffff !important; }
+.toast.toast-info    { --toast-accent-color: #3b82f6; background: #3b82f6 !important; color: #ffffff !important; }
+
+.toast-icon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.toast-close { background: none; border: none; color: inherit; cursor: pointer; font-size: 1.4rem; opacity: 0.4; line-height: 1; padding: 0; margin-left: auto; transition: opacity 0.2s; align-self: flex-start; }
+.toast-close:hover { opacity: 1; }
+.toast-progress { position: absolute; bottom: 0; left: 0; height: 5px; width: 100%; background: rgba(255,255,255,0.7); opacity: 1; transform-origin: left; z-index: 10; transform: scaleX(1); }
+
+@keyframes slideInRight  { from { transform: translateX(120%);  opacity: 0; } to { transform: translateX(0);    opacity: 1; } }
+@keyframes slideOutRight { to   { transform: translateX(120%);  opacity: 0; } }
+@keyframes slideInLeft   { from { transform: translateX(-120%); opacity: 0; } to { transform: translateX(0);    opacity: 1; } }
+@keyframes slideOutLeft  { to   { transform: translateX(-120%); opacity: 0; } }
+@keyframes slideOutUp    { to   { transform: translateY(-100%); opacity: 0; } }
+@keyframes slideOutDown  { to   { transform: translateY(100%);  opacity: 0; } }

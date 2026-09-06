@@ -10,6 +10,12 @@
     <form method="post">
       {% csrf_token %}
 
+      {% if form.errors %}
+      <div style="color:red;margin-bottom:12px;">
+        {{ form.errors }}
+      </div>
+      {% endif %}
+
       <div class="org-form-section">
         <h3>Basics</h3>
         <div class="org-form-row">{{ form.name.label_tag }} {{ form.name }}</div>
@@ -27,59 +33,9 @@
         </div>
       </div>
 
-      <div class="org-form-section">
-        <h3>Machine Generation</h3>
-        <div class="org-form-row">
-          {{ form.generation_mode.label_tag }} {{ form.generation_mode }}
-        </div>
-
-        <div id="org-random-panel" class="org-form-row">
-          {{ form.random_machine_count.label_tag }} {{ form.random_machine_count }}
-          <p class="org-hint">The engine will pick this many machines at random for the chosen difficulty/industry.</p>
-        </div>
-
-        <div id="org-precise-panel" class="org-form-row" style="display:none;">
-          <p class="org-hint">Pick exact machine counts from the catalog.</p>
-          <table class="org-table">
-            <thead>
-              <tr><th>Machine Template</th><th>OS</th><th>Role</th><th>Quantity</th></tr>
-            </thead>
-            <tbody>
-              {% for template in machine_templates %}
-              <tr>
-                <td>{{ template.name }}</td>
-                <td>{{ template.get_os_family_display }}</td>
-                <td>{{ template.role }}</td>
-                <td><input type="number" min="0" value="0" name="machine_{{ template.id }}" /></td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="4">No machine templates in the catalog yet.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       <button class="org-button" type="submit">Create Competition</button>
     </form>
   </div>
 </div>
-
-<script>
-  (function () {
-    var modeField = document.getElementById("id_generation_mode");
-    var randomPanel = document.getElementById("org-random-panel");
-    var precisePanel = document.getElementById("org-precise-panel");
-
-    function sync() {
-      var isPrecise = modeField.value === "precise";
-      randomPanel.style.display = isPrecise ? "none" : "";
-      precisePanel.style.display = isPrecise ? "" : "none";
-    }
-
-    modeField.addEventListener("change", sync);
-    sync();
-  })();
-</script>
 
 {% endblock %}

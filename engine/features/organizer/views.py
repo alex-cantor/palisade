@@ -74,12 +74,18 @@ def competition_provision_teams(request, pk):
 
 @staff_member_required
 def competition_provision_baseline(request, pk):
-  """Phase 1: provision VMs for a single baseline team for vulnerability injection."""
+  """Phase 1: provision VMs for the baseline team (Team 1) for vulnerability injection."""
   competition = get_object_or_404(Competition, pk=pk)
   if request.method == "POST":
-    # TODO: call provisioning.provision_baseline(competition) when implemented
-    messages.info(request, "Baseline provisioning queued — not yet wired to PVE. "
-                           "VMs for the baseline team will appear here once connected.")
+    result = provisioning.provision_baseline(competition)
+    if result["status"] == "done":
+      messages.success(request, f"Baseline provisioned: {len(result['provisioned'])} VM(s) running. "
+                                f"SSH in and inject vulnerabilities, then run Full Provision.")
+    elif result["status"] == "partial":
+      messages.warning(request, f"Baseline partially provisioned: {len(result['provisioned'])} VM(s) up, "
+                                f"{len(result['errors'])} error(s): {'; '.join(result['errors'])}")
+    else:
+      messages.error(request, result.get("detail") or "; ".join(result.get("errors", ["Unknown error"])))
   return redirect("organizer:competition_machines", pk=pk)
 
 
