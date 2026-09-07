@@ -80,13 +80,28 @@
     </p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <a class="org-button org-button-secondary" href="{% url 'organizer:competition_machines' competition.pk %}">Configure Machines &rarr;</a>
-      <form method="post" action="{% url 'organizer:competition_provision_baseline' competition.pk %}">
+      <form method="post" action="{% url 'organizer:competition_provision_baseline' competition.pk %}"
+            data-async-job="true"
+            data-async-title="Provisioning baseline VMs"
+            data-async-subtitle="Grab a coffee ☕. Cloning VMs takes a few minutes.">
         {% csrf_token %}
         <button class="org-button" type="submit"
           {% if not machines %}disabled title="Add machines first"{% endif %}>
           Provision Baseline
         </button>
       </form>
+      {% if has_baseline %}
+      <form method="post" action="{% url 'organizer:competition_deprovision_baseline' competition.pk %}"
+            data-confirm="Destroy all baseline VMs on PVE and remove them from the database? This cannot be undone."
+            data-async-job="true"
+            data-async-title="Deleting baseline VMs"
+            data-async-subtitle="Stopping and destroying VMs on PVE...">
+        {% csrf_token %}
+        <button class="org-button org-button-secondary" type="submit" style="border-color:#c0392b;color:#c0392b;">
+          Delete Baseline
+        </button>
+      </form>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -136,5 +151,87 @@
 </div>
 
 {% endif %}
+
+<div id="job-overlay">
+  <div id="job-dialog">
+    <div id="job-spinner"></div>
+    <h3 id="job-title"></h3>
+    <p id="job-subtitle"></p>
+    <div id="job-log"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const overlay = document.getElementById('job-overlay');
+  const titleEl = document.getElementById('job-title');
+  const subEl   = document.getElementById('job-subtitle');
+  const logEl   = document.getElementById('job-log');
+  const spinner = document.getElementById('job-spinner');
+
+  function getCsrf() {
+    const m = document.cookie.match('(^|;) ?csrftoken=([^;]*)(;|$)');
+    return m ? m[2] : '';
+  }
+
+  function showOverlay(title, subtitle) {
+    titleEl.textContent = title;
+    subEl.textContent   = subtitle;
+    logEl.innerHTML     = '';
+    spinner.style.display = 'block';
+    overlay.classList.add('job-overlay-visible');
+  }
+
+  function appendLog(level, text) {
+    const p = document.createElement('p');
+    p.className = 'job-log-' + level;
+    p.textContent = text;
+    logEl.appendChild(p);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function pollJob(pk, jobId) {
+    let lastIdx = 0;
+    const iv = setInterval(() => {
+      fetch(`/organizer/${pk}/job-status/${jobId}/`)
+        .then(r => r.json())
+        .then(data => {
+          data.log.slice(lastIdx).forEach(m => appendLog(m.level, m.text));
+          lastIdx = data.log.length;
+          if (data.done) {
+            clearInterval(iv);
+            spinner.style.display = 'none';
+            appendLog(data.success ? 'success' : 'error', data.final);
+            setTimeout(() => {
+              overlay.classList.remove('job-overlay-visible');
+              toast.show(data.success ? 'success' : 'error', data.success ? 'Done' : 'Error', data.final);
+              location.reload();
+            }, 1800);
+          }
+        })
+        .catch(() => {});
+    }, 2000);
+  }
+
+  document.addEventListener('submit', e => {
+    const form = e.target;
+    if (!form.dataset.asyncJob) return;
+    if (form.dataset.confirm && !form.dataset.confirmed) return;
+    e.preventDefault();
+    showOverlay(form.dataset.asyncTitle || 'Working…', form.dataset.asyncSubtitle || 'Please wait.');
+    fetch(form.action, { method: 'POST', headers: { 'X-CSRFToken': getCsrf() } })
+      .then(r => r.json())
+      .then(data => {
+        if (data.job_id) {
+          pollJob('{{ competition.pk }}', data.job_id);
+        } else {
+          appendLog('error', 'Failed to start job.');
+          spinner.style.display = 'none';
+        }
+      })
+      .catch(err => { appendLog('error', 'Request failed: ' + err); spinner.style.display = 'none'; });
+  });
+})();
+</script>
 
 {% endblock %}

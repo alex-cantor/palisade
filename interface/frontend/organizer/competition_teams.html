@@ -53,7 +53,7 @@
 <div class="org-card">
   <div class="org-card-header" style="display:flex;align-items:center;justify-content:space-between;">
     <h2>{{ team.name }}</h2>
-    <form method="post" action="{% url 'organizer:team_delete' competition.pk team.pk %}" onsubmit="return confirm('Delete {{ team.name }} and all its members?');">
+    <form method="post" action="{% url 'organizer:team_delete' competition.pk team.pk %}" data-confirm="Delete {{ team.name }} and all its members?">
       {% csrf_token %}
       <button class="org-button org-button-secondary" style="padding:4px 12px;font-size:12px;" type="submit">Delete Team</button>
     </form>
@@ -84,7 +84,7 @@
             </form>
           </td>
           <td style="text-align:right;">
-            <form method="post" action="{% url 'organizer:member_delete' competition.pk member.pk %}" onsubmit="return confirm('Remove {{ member.user.get_full_name|default:member.user.username }}?');">
+            <form method="post" action="{% url 'organizer:member_delete' competition.pk member.pk %}" data-confirm="Remove {{ member.user.get_full_name|default:member.user.username }}?">
               {% csrf_token %}
               <button class="org-button org-button-secondary" style="padding:4px 10px;font-size:11px;" type="submit">Remove</button>
             </form>

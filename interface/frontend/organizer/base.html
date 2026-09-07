@@ -25,7 +25,55 @@
       {% block content %}{% endblock %}
     </div>
 
+    <div id="org-modal-backdrop">
+      <div id="org-modal">
+        <p id="org-modal-msg"></p>
+        <div class="org-modal-actions">
+          <button id="org-modal-cancel" class="org-button org-button-secondary">Cancel</button>
+          <button id="org-modal-ok" class="org-button">Confirm</button>
+        </div>
+      </div>
+    </div>
+
     <script>
+    // Modal confirm — replaces browser alert/confirm dialogs
+    (function () {
+      const backdrop = document.getElementById('org-modal-backdrop');
+      const msg      = document.getElementById('org-modal-msg');
+      const okBtn    = document.getElementById('org-modal-ok');
+      const cancelBtn= document.getElementById('org-modal-cancel');
+      let _form = null;
+
+      function show(text, form) {
+        _form = form;
+        msg.textContent = text;
+        backdrop.classList.add('org-modal-visible');
+      }
+      function hide() {
+        backdrop.classList.remove('org-modal-visible');
+        _form = null;
+      }
+
+      okBtn.onclick = () => {
+        backdrop.classList.remove('org-modal-visible');
+        if (_form) {
+          _form.dataset.confirmed = '1';
+          _form.requestSubmit();
+          _form = null;
+        }
+      };
+      cancelBtn.onclick = hide;
+      backdrop.onclick = (e) => { if (e.target === backdrop) hide(); };
+
+      document.addEventListener('submit', (e) => {
+        const form = e.target;
+        if (form.dataset.confirm && !form.dataset.confirmed) {
+          e.preventDefault();
+          show(form.dataset.confirm, form);
+        }
+      });
+    })();
+
     class Toast {
       constructor(pos = 'br', maxStack = 3) {
         this.maxStack = maxStack;
@@ -37,7 +85,7 @@
           document.body.appendChild(this.container);
         }
       }
-      show(type, title, msg, duration = 4000) {
+      show(type, title, msg, duration = 5000) {
         const active = this.container.querySelectorAll('.toast');
         if (active.length >= this.maxStack) active[0].remove();
         const t = document.createElement('div');
@@ -50,13 +98,31 @@
         t.style.animation = 'slideInRight 0.4s forwards';
         this.container.appendChild(t);
         const bar = t.querySelector('.toast-progress');
-        setTimeout(() => { bar.style.transition = `transform ${duration}ms linear`; bar.style.transform = 'scaleX(0)'; }, 50);
         const dismiss = () => {
           t.style.animation = 'slideOutRight 0.3s forwards';
           t.addEventListener('animationend', () => t.remove(), { once: true });
         };
+        let timerId = null;
+        let remaining = duration;
+        let startedAt = null;
+        const run = () => {
+          startedAt = Date.now();
+          bar.style.transition = `transform ${remaining}ms linear`;
+          bar.style.transform = 'scaleX(0)';
+          timerId = setTimeout(dismiss, remaining);
+        };
+        t.addEventListener('mouseenter', () => {
+          if (!timerId) return;
+          clearTimeout(timerId);
+          timerId = null;
+          remaining -= Date.now() - startedAt;
+          const scale = new DOMMatrix(getComputedStyle(bar).transform).m11;
+          bar.style.transition = 'none';
+          bar.style.transform = `scaleX(${scale})`;
+        });
+        t.addEventListener('mouseleave', () => { run(); });
         t.querySelector('.toast-close').onclick = dismiss;
-        setTimeout(dismiss, duration);
+        setTimeout(run, 50);
       }
       _icon(type) {
         return {
@@ -74,8 +140,7 @@
     toast.show(
       '{{ message.tags|default:"info" }}',
       '{{ message.tags|capfirst|default:"Info" }}',
-      '{{ message|escapejs }}',
-      {% if message.tags == 'error' %}6000{% else %}4000{% endif %}
+      '{{ message|escapejs }}'
     );
     {% endfor %}
     </script>

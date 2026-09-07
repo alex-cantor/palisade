@@ -18,6 +18,8 @@ urlpatterns = [
   path("<int:pk>/", views.competition_detail, name="competition_detail"),
   path("<int:pk>/provision-teams/", views.competition_provision_teams, name="competition_provision_teams"),
   path("<int:pk>/provision-baseline/", views.competition_provision_baseline, name="competition_provision_baseline"),
+  path("<int:pk>/deprovision-baseline/", views.competition_deprovision_baseline, name="competition_deprovision_baseline"),
+  path("<int:pk>/job-status/<str:job_id>/", views.provision_job_status, name="provision_job_status"),
   path("<int:pk>/provision-infra/", views.competition_provision_infra, name="competition_provision_infra"),
   path("<int:pk>/go-live/", views.competition_go_live, name="competition_go_live"),
 

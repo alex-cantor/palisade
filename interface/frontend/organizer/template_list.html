@@ -30,7 +30,7 @@
           <td>{% if t.proxmox_vmid %}<code>{{ t.proxmox_vmid }}</code>{% else %}<span style="color:#999;">not set</span>{% endif %}</td>
           <td style="text-align:right;white-space:nowrap;">
             <a class="org-button" style="padding:5px 12px;font-size:12px;" href="{% url 'organizer:template_edit' t.pk %}">Edit</a>
-            <form method="post" action="{% url 'organizer:template_delete' t.pk %}" style="display:inline;" onsubmit="return confirm('Delete {{ t.name }}?');">
+            <form method="post" action="{% url 'organizer:template_delete' t.pk %}" style="display:inline;" data-confirm="Delete {{ t.name }}?">
               {% csrf_token %}
               <button class="org-button org-button-secondary" style="padding:5px 12px;font-size:12px;" type="submit">Delete</button>
             </form>

@@ -90,7 +90,7 @@
             </td>
             {% endfor %}
             <td style="text-align:right;">
-              <form method="post" action="{% url 'organizer:inject_delete' competition.pk row.inject.pk %}" onsubmit="return confirm('Delete this inject?');">
+              <form method="post" action="{% url 'organizer:inject_delete' competition.pk row.inject.pk %}" data-confirm="Delete this inject?">
                 {% csrf_token %}
                 <button class="org-button org-button-secondary" style="padding:3px 10px;font-size:11px;" type="submit">Delete</button>
               </form>

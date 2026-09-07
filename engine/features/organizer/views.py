@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from features.competitions.models import Competition, MachineTemplate, CompetitionMachine, ProvisionedMachine
@@ -77,16 +78,26 @@ def competition_provision_baseline(request, pk):
   """Phase 1: provision VMs for the baseline team (Team 1) for vulnerability injection."""
   competition = get_object_or_404(Competition, pk=pk)
   if request.method == "POST":
-    result = provisioning.provision_baseline(competition)
-    if result["status"] == "done":
-      messages.success(request, f"Baseline provisioned: {len(result['provisioned'])} VM(s) running. "
-                                f"SSH in and inject vulnerabilities, then run Full Provision.")
-    elif result["status"] == "partial":
-      messages.warning(request, f"Baseline partially provisioned: {len(result['provisioned'])} VM(s) up, "
-                                f"{len(result['errors'])} error(s): {'; '.join(result['errors'])}")
-    else:
-      messages.error(request, result.get("detail") or "; ".join(result.get("errors", ["Unknown error"])))
-  return redirect("organizer:competition_machines", pk=pk)
+    job_id = provisioning.provision_baseline_bg(competition)
+    return JsonResponse({"job_id": job_id})
+  return redirect("organizer:competition_detail", pk=pk)
+
+
+@staff_member_required
+def competition_deprovision_baseline(request, pk):
+  competition = get_object_or_404(Competition, pk=pk)
+  if request.method == "POST":
+    job_id = provisioning.deprovision_baseline_bg(competition)
+    return JsonResponse({"job_id": job_id})
+  return redirect("organizer:competition_detail", pk=pk)
+
+
+@staff_member_required
+def provision_job_status(request, pk, job_id):
+  job = provisioning.get_job_status(job_id)
+  if not job:
+    return JsonResponse({"error": "Job not found"}, status=404)
+  return JsonResponse(job)
 
 
 @staff_member_required

@@ -25,7 +25,7 @@ class CompetitionForm(forms.ModelForm):
 class MachineTemplateForm(forms.ModelForm):
   class Meta:
     model = MachineTemplate
-    fields = ["name", "os_family", "role", "description", "proxmox_vmid"]
+    fields = ["name", "os_family", "role", "description", "proxmox_vmid", "default_user"]
     widgets = {
       "description": forms.Textarea(attrs={"rows": 3}),
     }

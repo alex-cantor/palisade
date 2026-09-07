@@ -24,7 +24,7 @@
           <td>{% if cm.machine_template.proxmox_vmid %}<code>{{ cm.machine_template.proxmox_vmid }}</code>{% else %}<span style="color:#999;">not set</span>{% endif %}</td>
           <td>{{ cm.quantity }}</td>
           <td style="text-align:right;">
-            <form method="post" action="{% url 'organizer:competition_machine_remove' competition.pk cm.pk %}" onsubmit="return confirm('Remove {{ cm.machine_template.name }}?');">
+            <form method="post" action="{% url 'organizer:competition_machine_remove' competition.pk cm.pk %}" data-confirm="Remove {{ cm.machine_template.name }}?">
               {% csrf_token %}
               <button class="org-button org-button-secondary" style="padding:5px 12px;font-size:12px;" type="submit">Remove</button>
             </form>

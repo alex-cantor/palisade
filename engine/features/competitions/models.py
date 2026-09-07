@@ -68,6 +68,10 @@ class MachineTemplate(models.Model):
       null=True, blank=True,
       help_text="ProxMox template VMID (e.g. 9001 for tmpl-debian8)"
   )
+  default_user = models.CharField(
+      max_length=64, blank=True, default="",
+      help_text="cloud-init username for this image (e.g. debian, ubuntu, rocky)"
+  )
 
   def __str__(self):
     return self.name
