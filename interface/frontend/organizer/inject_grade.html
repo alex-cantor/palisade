@@ -1,0 +1,55 @@
+{% extends "organizer/base.html" %}
+{% block title %}Grade — {{ inject.title }}{% endblock %}
+{% block content %}
+
+<div class="org-page-header">
+  <h1>Grade &mdash; {{ inject.title }}</h1>
+  <a class="org-button org-button-secondary" href="{% url 'organizer:competition_injects' competition.pk %}">&larr; Back to Injects</a>
+</div>
+
+<div class="org-card">
+  <div class="org-card-header">
+    <h2>{{ inject.title }} &mdash; {{ inject.points }} pts max</h2>
+  </div>
+  <div class="org-card-body" style="padding:0;">
+    {% for row in team_rows %}
+    <div style="padding:18px;border-bottom:1px solid #e8e8e8;">
+      <h3 style="margin-bottom:10px;">{{ row.team.name }}</h3>
+      {% if row.submission and row.submission.content %}
+        <div style="background:#f7f7f7;border:1px solid #ddd;border-radius:4px;padding:12px;margin-bottom:12px;white-space:pre-wrap;font-size:13px;">{{ row.submission.content }}</div>
+      {% else %}
+        <p style="color:#999;margin-bottom:12px;font-style:italic;">No submission.</p>
+      {% endif %}
+      {% if row.submission and row.submission.graded_points != None %}
+        <p style="margin-bottom:8px;font-size:13px;color:#555;">
+          Current score: <strong>{{ row.submission.graded_points }}/{{ inject.points }}</strong>
+          &mdash; graded by {{ row.submission.graded_by.username|default:"unknown" }}
+          at {{ row.submission.graded_at|date:"m/d H:i" }} UTC
+        </p>
+      {% endif %}
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="team_pk" value="{{ row.team.pk }}" />
+        <div class="org-form-row-split" style="align-items:flex-end;gap:14px;">
+          <div class="org-form-row" style="margin-bottom:0;">
+            <label>Points (0&ndash;{{ inject.points }})</label>
+            <input type="number" name="points" min="0" max="{{ inject.points }}" placeholder="0&ndash;{{ inject.points }}"
+              value="{% if row.submission and row.submission.graded_points != None %}{{ row.submission.graded_points }}{% endif %}" />
+          </div>
+          <div class="org-form-row" style="margin-bottom:0;flex:2;">
+            <label>Feedback</label>
+            <textarea name="feedback" rows="2" style="max-width:100%;width:100%;">{% if row.submission %}{{ row.submission.feedback }}{% endif %}</textarea>
+          </div>
+          <div style="padding-bottom:1px;">
+            <button class="org-button" type="submit">Save Grade</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    {% empty %}
+    <p style="padding:20px;color:#999;text-align:center;">No teams in this competition.</p>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

@@ -43,5 +43,6 @@ urlpatterns = [
   path("<int:pk>/announcements/", views.competition_announcements, name="competition_announcements"),
   path("<int:pk>/injects/", views.competition_injects, name="competition_injects"),
   path("<int:pk>/injects/<int:inject_pk>/delete/", views.inject_delete, name="inject_delete"),
+  path("<int:pk>/injects/<int:inject_pk>/grade/", views.inject_grade, name="inject_grade"),
   path("<int:pk>/scoreboard/", views.competition_scoreboard, name="competition_scoreboard"),
 ]

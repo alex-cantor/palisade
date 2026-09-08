@@ -184,6 +184,7 @@ a { all: unset; cursor: pointer; }
 .org-table tbody tr:nth-child(even) { background: #f7e9af; }
 .org-cell-yes { color: #2e7d32; font-weight: 700; text-align: center; }
 .org-cell-no { color: #999; text-align: center; }
+.org-cell-warn { color: #b45309; font-weight: 700; text-align: center; }
 
 .org-kv-table { width: 100%; border-collapse: collapse; }
 .org-kv-table th {

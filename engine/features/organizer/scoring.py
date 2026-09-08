@@ -1,16 +1,22 @@
-def compute_scoreboard(competition):
-  """Build the scoreboard for a competition.
+from features.injects.models import InjectSubmission
 
-  TODO: this should aggregate real points from Inject/InjectSubmission
-  (and eventually Service uptime history once that's tracked over time).
-  For now it returns one real row per team with a placeholder score so
-  the scoreboard UI has the correct shape to build against.
-  """
-  rows = []
-  for team in competition.teams.order_by("name"):
-    rows.append({
-      "team": team.name,
-      "score": "—",
-      "rank": None,
-    })
+
+def compute_scoreboard(competition):
+  teams = list(competition.teams.order_by("name"))
+
+  graded = InjectSubmission.objects.filter(
+    inject__competition=competition,
+    graded_points__isnull=False,
+  ).values("team_id", "graded_points")
+
+  scores = {}
+  for row in graded:
+    scores[row["team_id"]] = scores.get(row["team_id"], 0) + row["graded_points"]
+
+  rows = [{"team": t, "score": scores.get(t.id, 0)} for t in teams]
+  rows.sort(key=lambda r: r["score"], reverse=True)
+
+  for i, row in enumerate(rows):
+    row["rank"] = i + 1
+
   return rows

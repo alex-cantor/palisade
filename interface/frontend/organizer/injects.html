@@ -84,12 +84,17 @@
             <td title="{{ row.inject.description }}">{{ row.inject.title }}</td>
             <td>{{ row.inject.due_time|date:"m/d H:i" }} UTC</td>
             <td>{{ row.inject.points }}</td>
-            {% for submitted in row.cells %}
-            <td class="{% if submitted %}org-cell-yes{% else %}org-cell-no{% endif %}">
-              {% if submitted %}&#10003;{% else %}&mdash;{% endif %}
-            </td>
+            {% for cell in row.cells %}
+              {% if cell == None %}
+                <td class="org-cell-no">&mdash;</td>
+              {% elif cell.graded_points == None %}
+                <td class="org-cell-warn" title="{{ cell.content|truncatechars:80 }}">Pending</td>
+              {% else %}
+                <td class="org-cell-yes">{{ cell.graded_points }}/{{ row.inject.points }}</td>
+              {% endif %}
             {% endfor %}
-            <td style="text-align:right;">
+            <td style="text-align:right;white-space:nowrap;display:flex;gap:6px;align-items:center;justify-content:flex-end;">
+              <a class="org-button org-button-secondary" style="padding:3px 10px;font-size:11px;" href="{% url 'organizer:inject_grade' competition.pk row.inject.pk %}">Grade</a>
               <form method="post" action="{% url 'organizer:inject_delete' competition.pk row.inject.pk %}" data-confirm="Delete this inject?">
                 {% csrf_token %}
                 <button class="org-button org-button-secondary" style="padding:3px 10px;font-size:11px;" type="submit">Delete</button>

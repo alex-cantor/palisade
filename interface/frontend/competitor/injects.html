@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Palisade &mdash; Injects</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+  </head>
+  <body>
+    <nav>
+      <ul class="navbar">
+        <div>
+          <li><a href="{% url 'dashboard' %}">SCOREBOARD</a></li>
+          <li><a href="{% url 'injects:inject_list' %}">INJECTS</a></li>
+          <li><a href="{% url 'dashboard' %}">ANNOUNCEMENTS</a></li>
+          <li><a href="{% url 'services' %}">SERVICES</a></li>
+        </div>
+        <div>
+          <li><a href="{% url 'logout' %}">{{ team.name }} Profile</a></li>
+          <li><a href="{% url 'logout' %}">LOGOUT</a></li>
+        </div>
+      </ul>
+    </nav>
+
+    <div class="feed">
+      <div class="standard-dashboard-wrapper" style="width:95%;max-width:1100px;">
+        <div class="dashboard-header">
+          <h1>Injects</h1>
+        </div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tbody>
+              <tr>
+                <th>Title</th>
+                <th>Start</th>
+                <th>Due</th>
+                <th>Points</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+              {% for row in rows %}
+              <tr>
+                <td>{{ row.inject.title }}</td>
+                <td>{{ row.inject.start_time|date:"m/d H:i" }} UTC</td>
+                <td>{{ row.inject.due_time|date:"m/d H:i" }} UTC</td>
+                <td>{{ row.inject.points }}</td>
+                <td>
+                  {% if not row.open %}
+                    Not started
+                  {% elif not row.submission %}
+                    Not submitted
+                  {% elif row.submission.graded_points == None %}
+                    Submitted &mdash; pending grade
+                  {% else %}
+                    {{ row.submission.graded_points }}/{{ row.inject.points }} pts
+                    {% if row.submission.feedback %}
+                      <br /><span style="font-size:12px;color:#555;">{{ row.submission.feedback }}</span>
+                    {% endif %}
+                  {% endif %}
+                </td>
+                <td>
+                  {% if row.open and not row.overdue %}
+                    <form method="post" action="{% url 'injects:inject_submit' row.inject.pk %}">
+                      {% csrf_token %}
+                      <textarea name="content" rows="4" style="width:100%;min-width:200px;padding:6px;border:1px solid #ccc;border-radius:4px;font-size:13px;">{% if row.submission %}{{ row.submission.content }}{% endif %}</textarea>
+                      <br />
+                      <button type="submit" style="margin-top:6px;padding:6px 14px;background:#e21833;color:#fff;border:none;border-radius:3px;font-weight:700;cursor:pointer;">Submit</button>
+                    </form>
+                  {% else %}
+                    <span style="color:#999;">Closed</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6">No injects yet.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

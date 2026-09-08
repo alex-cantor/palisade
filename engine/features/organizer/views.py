@@ -7,6 +7,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
 
 from features.competitions.models import Competition, MachineTemplate, CompetitionMachine, ProvisionedMachine
 from features.injects.models import Inject, InjectSubmission
@@ -236,17 +237,16 @@ def competition_injects(request, pk):
   teams = list(competition.teams.order_by("name"))
   injects = list(competition.injects.order_by("start_time"))
 
-  submitted_pairs = set(
-    InjectSubmission.objects.filter(
-      inject__in=injects, team__in=teams, submitted_at__isnull=False,
-    ).values_list("inject_id", "team_id")
-  )
+  submission_map = {
+    (s.inject_id, s.team_id): s
+    for s in InjectSubmission.objects.filter(inject__in=injects, team__in=teams)
+  }
 
   rows = []
   for inject in injects:
     rows.append({
       "inject": inject,
-      "cells": [(inject.id, team.id) in submitted_pairs for team in teams],
+      "cells": [submission_map.get((inject.id, team.id)) for team in teams],
     })
 
   library = _load_inject_library()
@@ -270,6 +270,44 @@ def inject_delete(request, pk, inject_pk):
     inject.delete()
     messages.success(request, f"Deleted inject '{inject.title}'.")
   return redirect("organizer:competition_injects", pk=pk)
+
+
+@staff_member_required
+def inject_grade(request, pk, inject_pk):
+  competition = get_object_or_404(Competition, pk=pk)
+  inject = get_object_or_404(Inject, pk=inject_pk, competition=competition)
+  teams = list(competition.teams.order_by("name"))
+
+  if request.method == "POST":
+    team_pk = request.POST.get("team_pk")
+    team = get_object_or_404(Team, pk=team_pk, competition=competition)
+    try:
+      points = int(request.POST.get("points", 0))
+    except (ValueError, TypeError):
+      points = 0
+    points = max(0, min(points, inject.points))
+    feedback = request.POST.get("feedback", "").strip()
+    submission, _ = InjectSubmission.objects.get_or_create(inject=inject, team=team)
+    submission.graded_points = points
+    submission.graded_at = timezone.now()
+    submission.graded_by = request.user
+    submission.feedback = feedback
+    submission.save()
+    messages.success(request, f"Graded {team.name}: {points}/{inject.points} pts.")
+    return redirect("organizer:inject_grade", pk=pk, inject_pk=inject_pk)
+
+  submission_map = {
+    s.team_id: s
+    for s in InjectSubmission.objects.filter(inject=inject, team__in=teams).select_related("graded_by")
+  }
+  team_rows = [{"team": t, "submission": submission_map.get(t.id)} for t in teams]
+
+  return render(request, "organizer/inject_grade.html", {
+    "competition": competition,
+    "inject": inject,
+    "team_rows": team_rows,
+  })
+
 
 @staff_member_required
 def competition_scoreboard(request, pk):
