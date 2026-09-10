@@ -98,6 +98,7 @@ class ProvisionedMachine(models.Model):
     machine_template = models.ForeignKey(MachineTemplate, on_delete=models.CASCADE)
     vmid = models.PositiveIntegerField(unique=True)
     name = models.CharField(max_length=100)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
 

@@ -179,10 +179,16 @@ def competition_machine_remove(request, pk, cm_pk):
 
 @staff_member_required
 def competition_machine_browser(request, pk, vm_pk):
-  """Placeholder — will open Guacamole or similar remote console."""
-  messages.info(request, "Browser-based VM console not yet connected. "
-                         "This will open a Guacamole session when implemented.")
-  return redirect("organizer:competition_machines", pk=pk)
+  from core.console_tokens import create_token
+
+  competition = get_object_or_404(Competition, pk=pk)
+  vm = get_object_or_404(ProvisionedMachine, pk=vm_pk, competition=competition)
+  token = create_token(vm.pk)
+  return render(request, "organizer/vm_console.html", {
+    "competition": competition,
+    "vm": vm,
+    "ws_token": token,
+  })
 
 @staff_member_required
 def competition_announcements(request, pk):
@@ -312,11 +318,27 @@ def inject_grade(request, pk, inject_pk):
 @staff_member_required
 def competition_scoreboard(request, pk):
   competition = get_object_or_404(Competition, pk=pk)
-  rows = scoring.compute_scoreboard(competition)
+  rows, service_defs = scoring.compute_scoreboard(competition)
   return render(request, "organizer/scoreboard.html", {
     "competition": competition,
     "rows": rows,
+    "service_defs": service_defs,
   })
+
+
+@staff_member_required
+def competition_run_checks(request, pk):
+  if request.method != "POST":
+    from django.http import HttpResponseNotAllowed
+    return HttpResponseNotAllowed(["POST"])
+  competition = get_object_or_404(Competition, pk=pk)
+  from features.network.checker import run_checks
+  run_checks(competition)
+  from django.contrib import messages
+  messages.success(request, "Service checks complete.")
+  from django.shortcuts import redirect
+  from django.urls import reverse
+  return redirect(reverse("organizer:competition_scoreboard", args=[pk]))
 
 @staff_member_required
 def template_list(request):

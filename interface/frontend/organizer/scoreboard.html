@@ -4,22 +4,69 @@
 
 <div class="org-page-header">
   <h1>Scoreboard &mdash; {{ competition.name }}</h1>
-  <a class="org-button org-button-secondary" href="{% url 'organizer:competition_detail' competition.pk %}">&larr; Back</a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <form method="post" action="{% url 'organizer:competition_run_checks' competition.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="org-button">Run Checks Now</button>
+    </form>
+    <a class="org-button org-button-secondary" href="{% url 'organizer:competition_detail' competition.pk %}">&larr; Back</a>
+  </div>
 </div>
 
 <div class="org-card">
   <div class="org-card-body">
-    <p class="org-hint">Scoring engine isn't implemented yet — these are placeholder rows, one per provisioned team.</p>
+    {% if messages %}
+      {% for msg in messages %}
+        <p class="org-hint org-hint-{{ msg.tags }}" style="margin-bottom:12px;">{{ msg }}</p>
+      {% endfor %}
+    {% endif %}
+
     <table class="org-table">
-      <thead><tr><th>Team</th><th>Score</th></tr></thead>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Team</th>
+          {% for svc in service_defs %}
+            <th title="Port {{ svc.port }}">{{ svc.name }}</th>
+          {% endfor %}
+          <th>Services</th>
+          <th>Injects</th>
+          <th>Total</th>
+        </tr>
+      </thead>
       <tbody>
         {% for row in rows %}
-        <tr><td>{{ row.team }}</td><td>{{ row.score }}</td></tr>
+        <tr>
+          <td>{{ row.rank }}</td>
+          <td>{{ row.team.name }}</td>
+          {% for svc_status in row.service_statuses %}
+            <td style="text-align:center;">
+              {% if svc_status.last_up is None %}
+                <span title="Not checked yet" style="color:#999;">—</span>
+              {% elif svc_status.last_up %}
+                <span title="Up" style="color:#2e7d32;font-size:16px;">&#x25CF;</span>
+              {% else %}
+                <span title="Down" style="color:#e21833;font-size:16px;">&#x25CF;</span>
+              {% endif %}
+            </td>
+          {% endfor %}
+          <td>{{ row.service_score }}</td>
+          <td>{{ row.inject_score }}</td>
+          <td><strong>{{ row.score }}</strong></td>
+        </tr>
         {% empty %}
-        <tr><td colspan="2">No teams provisioned yet.</td></tr>
+        <tr>
+          <td colspan="{{ service_defs|length|add:5 }}">No teams yet.</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
+
+    {% if not service_defs %}
+      <p class="org-hint" style="margin-top:12px;">
+        No services defined yet. Add them in <a href="/admin/network/servicedefinition/add/">Django admin</a> to start tracking uptime.
+      </p>
+    {% endif %}
   </div>
 </div>
 

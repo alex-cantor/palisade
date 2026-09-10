@@ -45,4 +45,5 @@ urlpatterns = [
   path("<int:pk>/injects/<int:inject_pk>/delete/", views.inject_delete, name="inject_delete"),
   path("<int:pk>/injects/<int:inject_pk>/grade/", views.inject_grade, name="inject_grade"),
   path("<int:pk>/scoreboard/", views.competition_scoreboard, name="competition_scoreboard"),
+  path("<int:pk>/run-checks/", views.competition_run_checks, name="competition_run_checks"),
 ]

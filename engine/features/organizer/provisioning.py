@@ -172,6 +172,76 @@ def _ssh_grow_disk(host, vmid):
   ssh.close()
 
 
+def _api_set_vm_password(proxmox, node, vmid, username, password, log_fn=None):
+  def _log(msg):
+    if log_fn:
+      log_fn(msg)
+
+  import base64
+
+  # Wait up to 5 minutes — Ubuntu cloud-init can take 3+ minutes before the
+  # guest agent becomes reachable. Retry every 15 s, 20 attempts = 5 min.
+  max_retries = 20
+  for attempt in range(max_retries):
+    # ── Primary: agent set-user-password (clean, no shell needed) ────────────
+    try:
+      proxmox.nodes(node).qemu(vmid).agent("set-user-password").post(
+        username=username,
+        password=password,
+      )
+      _log(f"Password set via guest agent (attempt {attempt + 1}).")
+      return True
+    except Exception as exc:
+      err = str(exc)
+      agent_down = "not running" in err.lower() or "500" in err or "agent" in err.lower()
+      if not agent_down:
+        # Agent is up but set-user-password failed — most likely because
+        # cloud-init's ciuser didn't create the user (happens on Ubuntu when
+        # the username conflicts with an existing system group like 'admin').
+        # Ensure the user exists, then set the password via chpasswd.
+        _log(f"set-user-password failed ({exc}), ensuring user exists and retrying…")
+        try:
+          b64 = base64.b64encode(f"{username}:{password}\n".encode()).decode()
+          script = (
+            # Create user if missing. If a group with the same name already
+            # exists (e.g. 'admin' on Debian/Ubuntu), reuse it with -g.
+            f"if ! id {username} >/dev/null 2>&1; then "
+            f"  if getent group {username} >/dev/null 2>&1; then "
+            f"    useradd -m -s /bin/bash -g {username} -G sudo {username}; "
+            f"  else "
+            f"    useradd -m -s /bin/bash -G sudo {username} 2>/dev/null || "
+            f"    useradd -m -s /bin/bash {username}; "
+            f"  fi; "
+            f"fi; "
+            f"echo {b64} | base64 -d | chpasswd; "
+            f"passwd -u {username} 2>/dev/null || true"
+          )
+          exec_res = proxmox.nodes(node).qemu(vmid).agent("exec").post(**{
+            "command": ["bash", "-c", script]
+          })
+          pid = exec_res.get("pid")
+          if pid:
+            for _ in range(15):
+              time.sleep(1)
+              status = proxmox.nodes(node).qemu(vmid).agent("exec-status").get(pid=pid)
+              if status.get("exited"):
+                if status.get("exitcode", 1) == 0:
+                  _log(f"User created and password set via exec fallback (attempt {attempt + 1}).")
+                  return True
+                _log(f"exec fallback exited {status.get('exitcode')}: {status.get('err-data', '')}")
+                break
+        except Exception as exc2:
+          _log(f"exec fallback also failed: {exc2}")
+        return False
+
+    if attempt < max_retries - 1:
+      _log(f"Guest agent not ready yet, retrying in 15 s… ({attempt + 1}/{max_retries})")
+      time.sleep(15)
+
+  _log("Guest agent never became available — cloud-init credentials will apply instead.")
+  return False
+
+
 def _ssh_force_destroy(host, vmid):
   """SSH into PVE and forcefully remove a VM — last resort for broken VMs."""
   import os
@@ -348,8 +418,28 @@ def provision_baseline(competition, log=None):
           status="running",
         )
 
-        L("success", f"{vm_name} booting (VMID {vmid}) — login: {ci_user} / {baseline_password}")
-        L("info", "cloud-init will finish in ~60 seconds. Serial console login prompt is normal.")
+        L("info", f"Waiting for guest agent to set password for {vm_name}…")
+        _api_set_vm_password(
+          proxmox, node, vmid, ci_user, baseline_password,
+          log_fn=lambda msg: L("info", msg),
+        )
+
+        try:
+          ifaces = proxmox.nodes(node).qemu(vmid).agent("network-get-interfaces").get()
+          ip = next(
+            addr["ip-address"]
+            for iface in ifaces.get("result", [])
+            if iface.get("name") != "lo"
+            for addr in iface.get("ip-addresses", [])
+            if addr.get("ip-address-type") == "ipv4"
+          )
+          ProvisionedMachine.objects.filter(vmid=vmid).update(ip_address=ip)
+          L("info", f"{vm_name} IP: {ip}")
+        except Exception:
+          L("info", f"Could not determine IP for {vm_name} — set it manually in admin.")
+
+        L("success", f"{vm_name} ready — login: {ci_user} / {baseline_password}")
+        L("info", "Serial console login prompt is normal — cloud-init may still be finishing.")
         provisioned.append({"vmid": vmid, "name": vm_name})
         vm_offset += 1
 

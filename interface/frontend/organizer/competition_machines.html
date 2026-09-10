@@ -77,10 +77,9 @@
             </span>
           </td>
           <td style="text-align:right;">
-            <form method="post" action="{% url 'organizer:competition_machine_browser' competition.pk vm.pk %}">
-              {% csrf_token %}
-              <button class="org-button" style="padding:5px 12px;font-size:12px;" type="submit">&#128196; Open in Browser</button>
-            </form>
+            <a class="org-button" style="padding:5px 12px;font-size:12px;display:inline-block;"
+               href="{% url 'organizer:competition_machine_browser' competition.pk vm.pk %}"
+               target="_blank">&#128196; Open Console</a>
           </td>
         </tr>
         {% empty %}

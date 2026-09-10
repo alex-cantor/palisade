@@ -1,22 +1,36 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from .models import Service
+from .models import ServiceDefinition, ServiceCheck
+from features.competitions.models import Competition
 
-# Create your views here.
+
 @login_required
 def services(request):
-  all_services = Service.objects.select_related("team").order_by("team__name", "service_name")
-  service_types = sorted(set(service.service_name for service in all_services))
-  teams = {}
+    competition = Competition.objects.filter(is_active=True).first()
+    if not competition:
+        return render(request, "services.html", {"service_types": [], "grid": []})
 
-  for service in all_services:
-    teams.setdefault(service.team.name, {})[service.service_name] = service.is_up
+    service_defs = list(ServiceDefinition.objects.filter(competition=competition))
+    teams = list(competition.teams.order_by("name"))
 
-  grid = []
-  for team_name, statuses in teams.items():
-    statuses_list = []
-    for service_type in service_types:
-      statuses_list.append(statuses.get(service_type))
-    grid.append({"team": team_name, "statuses": statuses_list})
+    # Most recent check result per (service, team)
+    recent_map = {}
+    for chk in ServiceCheck.objects.filter(
+        service__competition=competition
+    ).order_by("service_id", "team_id", "-checked_at").values("service_id", "team_id", "is_up"):
+        key = (chk["service_id"], chk["team_id"])
+        if key not in recent_map:
+            recent_map[key] = chk["is_up"]
 
-  return render(request, "services.html", {"service_types": service_types, "grid": grid,})
+    grid = [
+        {
+            "team": team.name,
+            "statuses": [recent_map.get((svc.id, team.id)) for svc in service_defs],
+        }
+        for team in teams
+    ]
+
+    return render(request, "services.html", {
+        "service_types": [svc.name for svc in service_defs],
+        "grid": grid,
+    })

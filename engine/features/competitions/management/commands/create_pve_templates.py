@@ -46,6 +46,9 @@ def build_commands(vmid, name, image_url, storage):
     return [
         f"echo '>>> [{vmid}] Downloading {name}'",
         f"wget -O {image_path} '{image_url}' 2>&1",
+        f"echo '>>> [{vmid}] Installing qemu-guest-agent in image'",
+        f"which virt-customize >/dev/null 2>&1 || DEBIAN_FRONTEND=noninteractive apt-get install -y libguestfs-tools 2>&1",
+        f"virt-customize -a {image_path} --install qemu-guest-agent --run-command 'systemctl enable qemu-guest-agent' 2>&1",
         f"echo '>>> [{vmid}] Creating VM'",
         f"qm create {vmid} --name {name} --memory 2048 --cores 2 --net0 virtio,bridge=vmbr0 --ostype l26",
         f"echo '>>> [{vmid}] Importing disk'",
@@ -163,8 +166,11 @@ class Command(BaseCommand):
             self.stdout.write(self.style.MIGRATE_HEADING(f"\n[{vmid}] {t['name']}"))
 
             if force:
-                ssh.exec_command(f"qm stop {vmid} --skiplock 1 2>/dev/null; qm destroy {vmid} --purge 1 2>/dev/null")
-                time.sleep(2)
+                _, out, _ = ssh.exec_command(
+                    f"qm stop {vmid} --skiplock 1 2>/dev/null; qm destroy {vmid} --purge 1 2>/dev/null; echo done",
+                    timeout=60,
+                )
+                out.channel.recv_exit_status()
 
             full_script = "{ " + " && ".join(build_commands(vmid, t["name"], t["url"], storage)) + "; } 2>&1"
             _, stdout, _ = ssh.exec_command(full_script, timeout=600)
